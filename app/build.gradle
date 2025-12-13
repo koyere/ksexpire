@@ -10,6 +10,24 @@ android {
     namespace 'com.koyeresolutions.ksexpire'
     compileSdk 34
 
+    // Configuración de keystore para release
+    def keystorePropertiesFile = rootProject.file("keystore.properties")
+    def keystoreProperties = new Properties()
+    if (keystorePropertiesFile.exists()) {
+        keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+    }
+
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                keyAlias keystoreProperties['keyAlias']
+                keyPassword keystoreProperties['keyPassword']
+                storeFile file(keystoreProperties['storeFile'])
+                storePassword keystoreProperties['storePassword']
+            }
+        }
+    }
+
     defaultConfig {
         applicationId "com.koyeresolutions.ksexpire"
         minSdk 24
@@ -39,8 +57,10 @@ android {
             renderscriptDebuggable false
             zipAlignEnabled true
             
-            // Configuración de firma (agregar cuando se genere keystore)
-            // signingConfig signingConfigs.release
+            // Configuración de firma
+            if (project.hasProperty('android.signingConfigs.release.keyAlias')) {
+                signingConfig signingConfigs.release
+            }
             
             // Configuraciones de build
             buildConfigField "boolean", "DEBUG_MODE", "false"
