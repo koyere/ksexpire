@@ -111,3 +111,7 @@ app/schemas/
 # Secrets and API keys (aunque esta app no usa, buena práctica)
 secrets.properties
 api_keys.properties
+
+# Development internal files
+MVP.md
+PLANNING.md
