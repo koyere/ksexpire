@@ -115,3 +115,9 @@ api_keys.properties
 # Development internal files
 MVP.md
 PLANNING.md
+play-store-description.md
+google-play-permissions-justification.md
+generate-keystore.md
+play-store-assets-checklist.md
+version-management.md
+final-testing-plan.md
