@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Ruta para archivos internos de la app -->
+    <files-path name="receipts" path="receipts/" />
+    <!-- Ruta para archivos de backup -->
+    <files-path name="backups" path="backups/" />
+    <!-- Ruta para archivos temporales -->
+    <cache-path name="temp" path="temp/" />
+</paths>

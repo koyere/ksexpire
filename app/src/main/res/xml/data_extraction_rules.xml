@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Excluir datos sensibles del backup en la nube -->
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="file" path="receipts/" />
+    </cloud-backup>
+    <device-transfer>
+        <!-- Permitir transferencia de dispositivo solo para configuraciones básicas -->
+        <exclude domain="database" />
+        <exclude domain="file" path="receipts/" />
+    </device-transfer>
+</data-extraction-rules>

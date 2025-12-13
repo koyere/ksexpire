@@ -1,0 +1,114 @@
+<resources>
+    <!-- App básico -->
+    <string name="app_name">KS Expire</string>
+    <string name="app_description">Control simple y privado de suscripciones, gastos y vencimientos</string>
+    
+    <!-- Navegación -->
+    <string name="nav_dashboard">Inicio</string>
+    <string name="nav_search">Buscar</string>
+    <string name="nav_about">Acerca de</string>
+    
+    <!-- Dashboard -->
+    <string name="dashboard_monthly_expense">Gasto mensual fijo</string>
+    <string name="dashboard_subscriptions">Suscripciones</string>
+    <string name="dashboard_warranties">Garantías y Recibos</string>
+    <string name="dashboard_no_subscriptions">No tienes suscripciones registradas</string>
+    <string name="dashboard_no_warranties">No tienes garantías registradas</string>
+    <string name="dashboard_add_first_item">Agrega tu primer ítem</string>
+    
+    <!-- Tipos de ítems -->
+    <string name="item_type_subscription">Suscripción</string>
+    <string name="item_type_warranty">Garantía / Recibo</string>
+    
+    <!-- Formularios -->
+    <string name="form_name">Nombre</string>
+    <string name="form_name_hint">Ej: Netflix, Amazon Prime</string>
+    <string name="form_price">Precio</string>
+    <string name="form_price_hint">0.00</string>
+    <string name="form_purchase_date">Fecha de compra</string>
+    <string name="form_expiry_date">Fecha de vencimiento</string>
+    <string name="form_billing_frequency">Frecuencia de cobro</string>
+    <string name="form_take_photo">Tomar foto del recibo</string>
+    <string name="form_retake_photo">Cambiar foto</string>
+    <string name="form_save">Guardar</string>
+    <string name="form_cancel">Cancelar</string>
+    
+    <!-- Frecuencias de cobro -->
+    <string name="frequency_monthly">Mensual</string>
+    <string name="frequency_annual">Anual</string>
+    <string name="frequency_weekly">Semanal</string>
+    
+    <!-- Estados -->
+    <string name="status_active">Activa</string>
+    <string name="status_paused">Pausada</string>
+    <string name="status_expired">Vencida</string>
+    
+    <!-- Fechas -->
+    <string name="next_billing">Próximo cobro: %1$s</string>
+    <string name="expires_in">Vence en %1$d días</string>
+    <string name="expired_days_ago">Venció hace %1$d días</string>
+    <string name="purchased_on">Comprado el %1$s</string>
+    
+    <!-- Búsqueda -->
+    <string name="search_hint">Buscar por nombre...</string>
+    <string name="search_no_results">No se encontraron resultados</string>
+    <string name="search_results_count">%1$d resultados encontrados</string>
+    
+    <!-- Cámara -->
+    <string name="camera_capture">Capturar</string>
+    <string name="camera_permission_required">Se requiere permiso de cámara</string>
+    <string name="camera_permission_denied">Permiso de cámara denegado</string>
+    <string name="camera_error">Error al acceder a la cámara</string>
+    
+    <!-- Notificaciones -->
+    <string name="notification_channel_subscriptions">Recordatorios de Suscripciones</string>
+    <string name="notification_channel_warranties">Recordatorios de Garantías</string>
+    <string name="notification_subscription_title">Próximo cobro: %1$s</string>
+    <string name="notification_subscription_text">Se cobrará %1$s mañana</string>
+    <string name="notification_warranty_title">Garantía por vencer: %1$s</string>
+    <string name="notification_warranty_text">Vence en %1$d días</string>
+    
+    <!-- Backup -->
+    <string name="backup_export">Exportar copia de seguridad</string>
+    <string name="backup_import">Importar copia de seguridad</string>
+    <string name="backup_creating">Creando copia de seguridad...</string>
+    <string name="backup_restoring">Restaurando datos...</string>
+    <string name="backup_success">Copia de seguridad creada exitosamente</string>
+    <string name="backup_restore_success">Datos restaurados exitosamente</string>
+    <string name="backup_error">Error al crear la copia de seguridad</string>
+    <string name="backup_restore_error">Error al restaurar los datos</string>
+    
+    <!-- Sobre el desarrollador -->
+    <string name="about_title">Sobre el Desarrollador</string>
+    <string name="about_description">Desarrollado con ❤️ por Koyere Solutions. Si te sirve esta app, compártela.</string>
+    <string name="about_website">Sitio Web</string>
+    <string name="about_linkedin">LinkedIn</string>
+    <string name="about_github">GitHub</string>
+    <string name="about_rate_app">Calificar App</string>
+    <string name="about_contact">Contacto / Feedback</string>
+    <string name="about_contact_subject">Feedback sobre KS Expire</string>
+    
+    <!-- Mensajes generales -->
+    <string name="message_photo_backup">La foto es respaldo. Los datos los controlas tú.</string>
+    <string name="message_item_saved">Ítem guardado correctamente</string>
+    <string name="message_item_deleted">Ítem eliminado</string>
+    <string name="message_confirm_delete">¿Estás seguro de eliminar este ítem?</string>
+    <string name="action_delete">Eliminar</string>
+    <string name="action_edit">Editar</string>
+    <string name="action_ok">Aceptar</string>
+    
+    <!-- Errores -->
+    <string name="error_name_required">El nombre es obligatorio</string>
+    <string name="error_date_required">Las fechas son obligatorias</string>
+    <string name="error_invalid_price">Precio inválido</string>
+    <string name="error_expiry_before_purchase">La fecha de vencimiento debe ser posterior a la de compra</string>
+    <string name="error_generic">Ha ocurrido un error</string>
+    
+    <!-- Monedas -->
+    <string name="currency_usd">$ USD</string>
+    <string name="currency_eur">€ EUR</string>
+    <string name="currency_gbp">£ GBP</string>
+    <string name="currency_mxn">$ MXN</string>
+    <string name="currency_cop">$ COP</string>
+    <string name="currency_auto">Automático</string>
+</resources>
