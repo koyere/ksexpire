@@ -1,46 +1,71 @@
-# Solución Rápida para Gradle Sync en Android Studio
+# ✅ SOLUCIÓN ESPECÍFICA - Java 21 + Gradle Compatibility
 
-## 🔧 Pasos para Solucionar el Error de Gradle:
+## 🎯 PROBLEMA IDENTIFICADO:
+- Tienes Java 21.0.8
+- Gradle 8.0 no es compatible con Java 21
+- **SOLUCIÓN**: Actualizar a Gradle 8.5 (compatible con Java 21)
 
-### 1. En Android Studio:
+## 🔧 PASOS EXACTOS PARA SOLUCIONAR:
+
+### 1. ✅ YA ACTUALIZADO (automático):
+- Gradle wrapper actualizado a 8.5
+- Android Gradle Plugin actualizado a 8.1.4
+- Kotlin actualizado a 1.9.10
+
+### 2. 🔄 REINICIA ANDROID STUDIO:
 1. **File** → **Invalidate Caches and Restart** → **Invalidate and Restart**
-2. Espera a que Android Studio se reinicie
+2. Espera a que se reinicie completamente
 
-### 2. Después del reinicio:
+### 3. 🔄 SINCRONIZAR PROYECTO:
 1. **File** → **Sync Project with Gradle Files**
-2. Si sigue fallando, continúa con el paso 3
+2. Debería sincronizar sin errores ahora
 
-### 3. Limpiar y reconstruir:
-1. **Build** → **Clean Project**
-2. **Build** → **Rebuild Project**
+### 4. 🏗️ GENERAR APK FIRMADO:
+1. **Build** → **Generate Signed Bundle / APK**
+2. Selecciona **APK**
+3. **Next**
+4. **Key store path**: Selecciona `ks-expire-release.jks`
+5. **Key store password**: Tu password del keystore
+6. **Key alias**: `ks-expire-key`
+7. **Key password**: Tu password de la key
+8. **Next**
+9. **Build Variants**: Selecciona **release**
+10. **Signature Versions**: V1 y V2 marcados
+11. **Finish**
 
-### 4. Si aún hay problemas:
-1. Ve a **File** → **Settings** → **Build, Execution, Deployment** → **Gradle**
-2. Cambia **Gradle JDK** a **Project SDK** o **Java 11**
-3. Click **Apply** y **OK**
-4. **File** → **Sync Project with Gradle Files**
+### 5. 📁 UBICACIÓN DEL APK:
+- **Archivo**: `app/build/outputs/apk/release/app-release.apk`
+- **Tamaño esperado**: ~8-12 MB
 
-### 5. Alternativa - Usar Gradle Wrapper específico:
-1. En la terminal de Android Studio (View → Tool Windows → Terminal):
+## 🚨 SI AÚN HAY PROBLEMAS:
+
+### Opción A - Terminal en Android Studio:
 ```bash
 ./gradlew clean
 ./gradlew assembleRelease
 ```
 
-### 6. Si nada funciona - Método Manual:
-1. **Build** → **Select Build Variant**
-2. Cambia de **debug** a **release**
-3. **Build** → **Make Project**
-4. Ve a **app/build/outputs/apk/release/** para encontrar el APK
+### Opción B - Cambiar JDK:
+1. **File** → **Settings** → **Build, Execution, Deployment** → **Gradle**
+2. **Gradle JDK**: Selecciona **Project SDK** (debería ser Java 21)
+3. **Apply** → **OK**
+4. **File** → **Sync Project with Gradle Files**
 
-## 🎯 Objetivo:
-Generar **app-release.apk** en la carpeta `app/build/outputs/apk/release/`
+## ✅ VERIFICACIÓN FINAL:
+Una vez generado el APK:
+```bash
+# Verificar que está firmado
+jarsigner -verify app-release.apk
 
-## ⚠️ Nota Importante:
-El keystore y passwords ya están configurados correctamente. El problema es solo de sincronización de Gradle.
+# Instalar en dispositivo
+adb install app-release.apk
+```
 
-## 🚀 Una vez que tengas el APK:
-1. Instálalo en tu dispositivo
-2. Agrega datos de ejemplo
-3. Captura los 5 screenshots según ASSETS.md
-4. ¡Listo para Play Store!
+## 🎯 PRÓXIMOS PASOS:
+1. ✅ Generar APK firmado
+2. 📱 Instalar en dispositivo
+3. 📊 Agregar datos de ejemplo
+4. 📸 Capturar 5 screenshots
+5. 🚀 Subir a Play Store
+
+**Con Gradle 8.5 y Java 21, todo debería funcionar perfectamente ahora.** 🎉
