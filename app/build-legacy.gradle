@@ -1,5 +1,6 @@
+// Legacy syntax for app build.gradle
 apply plugin: 'com.android.application'
-apply plugin: 'org.jetbrains.kotlin.android'
+apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'kotlin-parcelize'
 apply plugin: 'kotlinx-serialization'
@@ -56,7 +57,7 @@ android {
             zipAlignEnabled true
             
             // Configuración de firma
-            if (project.hasProperty('android.signingConfigs.release.keyAlias')) {
+            if (keystorePropertiesFile.exists()) {
                 signingConfig signingConfigs.release
             }
             
