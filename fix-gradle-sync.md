@@ -1,24 +1,28 @@
 # ✅ SOLUCIÓN ESPECÍFICA - Java 21 + Gradle Compatibility
 
-## 🎯 PROBLEMA IDENTIFICADO:
-- Tienes Java 21.0.8
-- Gradle 8.0 no es compatible con Java 21
-- **SOLUCIÓN**: Actualizar a Gradle 8.5 (compatible con Java 21)
+## 🚨 PROBLEMA CRÍTICO IDENTIFICADO:
+- **Error**: "Unsupported class file major version 65"
+- **Causa**: Java 21 (version 65) + Gradle incompatibility
+- **Problema**: Gradle 8.x tiene problemas internos con Java 21
+- **SOLUCIÓN RECOMENDADA**: Usar Java 17 (más estable)
 
-## 🔧 PASOS EXACTOS PARA SOLUCIONAR:
+## 🔧 SOLUCIÓN DEFINITIVA - CAMBIAR A JAVA 17:
 
-### 1. ✅ YA ACTUALIZADO (automático):
-- Gradle wrapper actualizado a 8.5
-- Android Gradle Plugin actualizado a 8.1.4
-- Kotlin actualizado a 1.9.10
+### 1. 📥 DESCARGAR JAVA 17:
+- Ve a: https://adoptium.net/temurin/releases/?version=17
+- Descarga: **OpenJDK 17 LTS** para Windows x64
+- Instala normalmente
 
-### 2. 🔄 REINICIA ANDROID STUDIO:
+### 2. ⚙️ CONFIGURAR ANDROID STUDIO:
+1. **File** → **Settings** (Ctrl+Alt+S)
+2. **Build, Execution, Deployment** → **Gradle**
+3. **Gradle JDK**: Cambiar de Java 21 a **Java 17**
+4. **Apply** → **OK**
+
+### 3. 🔄 REINICIAR Y SINCRONIZAR:
 1. **File** → **Invalidate Caches and Restart** → **Invalidate and Restart**
-2. Espera a que se reinicie completamente
-
-### 3. 🔄 SINCRONIZAR PROYECTO:
-1. **File** → **Sync Project with Gradle Files**
-2. Debería sincronizar sin errores ahora
+2. Después del reinicio: **File** → **Sync Project with Gradle Files**
+3. **Debería sincronizar sin errores**
 
 ### 4. 🏗️ GENERAR APK FIRMADO:
 1. **Build** → **Generate Signed Bundle / APK**
@@ -51,6 +55,21 @@
 3. **Apply** → **OK**
 4. **File** → **Sync Project with Gradle Files**
 
+## 🚨 ALTERNATIVAS SI NO PUEDES CAMBIAR JAVA:
+
+### Opción A - Usar Embedded JDK:
+1. **File** → **Settings** → **Build** → **Gradle**
+2. **Gradle JDK**: Selecciona **"Use Embedded JDK"**
+3. **Apply** → **OK** → **Sync Project**
+
+### Opción B - Ejecutar emergency-build.bat:
+- Ejecuta el script `emergency-build.bat` que creé
+- Te guiará paso a paso
+
+### Opción C - IntelliJ IDEA:
+- Si tienes IntelliJ IDEA Ultimate, ábrelo ahí
+- IntelliJ maneja mejor las incompatibilidades
+
 ## ✅ VERIFICACIÓN FINAL:
 Una vez generado el APK:
 ```bash
@@ -61,11 +80,20 @@ jarsigner -verify app-release.apk
 adb install app-release.apk
 ```
 
-## 🎯 PRÓXIMOS PASOS:
-1. ✅ Generar APK firmado
-2. 📱 Instalar en dispositivo
-3. 📊 Agregar datos de ejemplo
-4. 📸 Capturar 5 screenshots
-5. 🚀 Subir a Play Store
+## 🎯 MATRIZ DE COMPATIBILIDAD RECOMENDADA:
+| Componente | Versión Recomendada | Estado |
+|------------|---------------------|---------|
+| Java | **17 LTS** | ✅ MÁS ESTABLE |
+| Gradle | 8.8 | ✅ |
+| Android Gradle Plugin | 8.2.2 | ✅ |
+| Kotlin | 1.9.10 | ✅ |
 
-**Con Gradle 8.5 y Java 21, todo debería funcionar perfectamente ahora.** 🎉
+## 🚀 PRÓXIMOS PASOS:
+1. ✅ Cambiar a Java 17 (RECOMENDADO)
+2. 🔄 Sincronizar proyecto
+3. 🏗️ Generar APK firmado
+4. 📱 Instalar en dispositivo
+5. 📸 Capturar screenshots
+6. 🚀 Subir a Play Store
+
+**Java 17 + Gradle 8.8 = Combinación más estable para Android** 🎯
