@@ -42,7 +42,7 @@ object CurrencyUtils {
             savedSymbol
         } else {
             // Detectar automáticamente basado en la configuración del sistema
-            getAutoCurrencySymbol()
+            getLocalCurrencySymbol()
         }
     }
 
@@ -57,9 +57,9 @@ object CurrencyUtils {
     }
 
     /**
-     * Detectar símbolo de moneda automáticamente
+     * Detectar símbolo de moneda automáticamente basado en el locale del sistema
      */
-    private fun getAutoCurrencySymbol(): String {
+    fun getLocalCurrencySymbol(): String {
         return try {
             val currency = Currency.getInstance(Locale.getDefault())
             supportedCurrencies[currency.currencyCode] ?: currency.symbol
@@ -134,8 +134,8 @@ object CurrencyUtils {
     fun getSupportedCurrencies(): List<CurrencyOption> {
         val autoOption = CurrencyOption(
             code = "AUTO",
-            symbol = getAutoCurrencySymbol(),
-            name = "Automático (${getAutoCurrencySymbol()})"
+            symbol = getLocalCurrencySymbol(),
+            name = "Automático (${getLocalCurrencySymbol()})"
         )
         
         val manualOptions = supportedCurrencies.map { (code, symbol) ->

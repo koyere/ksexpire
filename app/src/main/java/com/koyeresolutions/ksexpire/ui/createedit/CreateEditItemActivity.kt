@@ -166,6 +166,11 @@ class CreateEditItemActivity : AppCompatActivity() {
         binding.switchActive.setOnCheckedChangeListener { _, _ ->
             viewModel.toggleActiveStatus()
         }
+        
+        // Botón Guardar
+        binding.buttonSave.setOnClickListener {
+            saveItem()
+        }
     }
 
     /**
@@ -357,8 +362,8 @@ class CreateEditItemActivity : AppCompatActivity() {
     /**
      * Mostrar mensaje de éxito
      */
-    private fun showSuccess() {
-        val message = if (isEditMode) "Ítem actualizado correctamente" else "Ítem creado correctamente"
+    private fun showSuccess(customMessage: String? = null) {
+        val message = customMessage ?: if (isEditMode) "Ítem actualizado correctamente" else "Ítem creado correctamente"
         Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT).show()
     }
 

@@ -32,8 +32,8 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
     private val _validationErrors = MutableLiveData<List<String>>()
     val validationErrors: LiveData<List<String>> = _validationErrors
 
-    private val _saveResult = MutableLiveData<SaveResult>()
-    val saveResult: LiveData<SaveResult> = _saveResult
+    private val _saveResult = MutableLiveData<SaveResult?>()
+    val saveResult: LiveData<SaveResult?> = _saveResult
 
     // Ítem actual (null para crear nuevo, objeto para editar)
     private var currentItem: Item? = null
@@ -219,6 +219,7 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
 
                 val state = _uiState.value
                 val priceValue = if (state.price.isBlank()) null else state.price.toDouble()
+                android.util.Log.d("CreateEditVM", "priceValue after conversion: $priceValue")
 
                 // Crear o actualizar ítem
                 val item = if (isEditMode && currentItem != null) {

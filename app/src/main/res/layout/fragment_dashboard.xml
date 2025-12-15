@@ -76,22 +76,54 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <!-- Card de gasto mensual -->
+                    <!-- Header con logo y título -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="16dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
+                            android:layout_marginEnd="12dp"
+                            android:src="@mipmap/ic_launcher"
+                            android:contentDescription="KS Expire Logo" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/app_name"
+                            android:textAppearance="?attr/textAppearanceHeadlineSmall"
+                            android:textColor="@color/brand_blue"
+                            android:textStyle="bold" />
+
+                    </LinearLayout>
+
+                    <!-- Card de gasto mensual con estilo de marca -->
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="24dp"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="2dp"
-                        app:strokeColor="?attr/colorOutline"
-                        app:strokeWidth="1dp">
+                        app:cardBackgroundColor="@color/subscription_container"
+                        app:cardCornerRadius="20dp"
+                        app:cardElevation="4dp"
+                        app:strokeColor="@color/subscription_primary"
+                        app:strokeWidth="2dp">
 
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:gravity="center"
                             android:orientation="vertical"
-                            android:padding="24dp">
+                            android:padding="28dp">
+
+                            <ImageView
+                                android:layout_width="32dp"
+                                android:layout_height="32dp"
+                                android:layout_marginBottom="8dp"
+                                android:src="@drawable/ic_subscription" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -99,14 +131,14 @@
                                 android:layout_marginBottom="8dp"
                                 android:text="@string/dashboard_monthly_expense"
                                 android:textAppearance="?attr/textAppearanceTitleMedium"
-                                android:textColor="?attr/colorOnSurfaceVariant" />
+                                android:textColor="@color/subscription_primary" />
 
                             <TextView
                                 android:id="@+id/text_monthly_expense"
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:textAppearance="?attr/textAppearanceDisplaySmall"
-                                android:textColor="?attr/colorPrimary"
+                                android:textColor="@color/subscription_primary"
                                 android:textStyle="bold"
                                 tools:text="$45.99/mes" />
 
@@ -129,13 +161,19 @@
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
+                            <ImageView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:layout_marginEnd="10dp"
+                                android:src="@drawable/ic_subscription" />
+
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/dashboard_subscriptions"
                                 android:textAppearance="?attr/textAppearanceTitleLarge"
-                                android:textColor="?attr/colorOnSurface" />
+                                android:textColor="@color/subscription_primary" />
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/button_view_all_subscriptions"
@@ -210,13 +248,19 @@
                             android:gravity="center_vertical"
                             android:orientation="horizontal">
 
+                            <ImageView
+                                android:layout_width="28dp"
+                                android:layout_height="28dp"
+                                android:layout_marginEnd="10dp"
+                                android:src="@drawable/ic_warranty" />
+
                             <TextView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 android:text="@string/dashboard_warranties"
                                 android:textAppearance="?attr/textAppearanceTitleLarge"
-                                android:textColor="?attr/colorOnSurface" />
+                                android:textColor="@color/warranty_primary" />
 
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/button_view_all_warranties"

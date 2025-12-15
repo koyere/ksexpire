@@ -122,7 +122,18 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
                 _isLoading.value = true
 
                 val results = when {
-                    query.isBlank() -> emptyList()
+                    // Si hay filtro específico pero no query, mostrar todos de ese tipo
+                    query.isBlank() && filter == SearchFilter.SUBSCRIPTIONS -> {
+                        repository.getActiveSubscriptions().first()
+                    }
+                    query.isBlank() && filter == SearchFilter.WARRANTIES -> {
+                        repository.getActiveWarranties().first()
+                    }
+                    query.isBlank() && filter == SearchFilter.ALL -> {
+                        // Mostrar todos los items activos cuando se selecciona "Todos"
+                        repository.getAllActiveItems().first()
+                    }
+                    // Búsqueda con query
                     filter == SearchFilter.ALL -> {
                         repository.searchItems(query).first()
                     }

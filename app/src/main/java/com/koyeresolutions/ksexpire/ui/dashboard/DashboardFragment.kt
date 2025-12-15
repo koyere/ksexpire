@@ -12,8 +12,12 @@ import androidx.core.view.MenuHost
 import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
@@ -151,38 +155,42 @@ class DashboardFragment : Fragment() {
      */
     private fun setupObservers() {
         // Observar gasto mensual
-        viewModel.monthlyExpense.observe(viewLifecycleOwner) { expense ->
+        viewModel.monthlyExpense.observe(viewLifecycleOwner, Observer { expense ->
             binding.textMonthlyExpense.text = viewModel.getFormattedMonthlyExpense()
-        }
+        })
 
         // Observar estado de carga
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
+        viewModel.isLoading.observe(viewLifecycleOwner, Observer { isLoading ->
             binding.swipeRefresh.isRefreshing = isLoading
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
+        })
 
         // Observar errores
-        viewModel.errorMessage.observe(viewLifecycleOwner) { error ->
+        viewModel.errorMessage.observe(viewLifecycleOwner, Observer { error ->
             error?.let {
                 showError(it)
                 viewModel.clearError()
             }
+        })
+
+        // Observar suscripciones (Flow)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.subscriptions.collect { subscriptions ->
+                subscriptionAdapter.submitList(subscriptions)
+                updateSubscriptionsVisibility(subscriptions.isEmpty())
+            }
         }
 
-        // Observar suscripciones
-        viewModel.subscriptions.observe(viewLifecycleOwner) { subscriptions ->
-            subscriptionAdapter.submitList(subscriptions)
-            updateSubscriptionsVisibility(subscriptions.isEmpty())
-        }
-
-        // Observar garantías
-        viewModel.warranties.observe(viewLifecycleOwner) { warranties ->
-            warrantyAdapter.submitList(warranties)
-            updateWarrantiesVisibility(warranties.isEmpty())
+        // Observar garantías (Flow)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.warranties.collect { warranties ->
+                warrantyAdapter.submitList(warranties)
+                updateWarrantiesVisibility(warranties.isEmpty())
+            }
         }
 
         // Observar estado del UI
-        lifecycleScope.launch {
+        viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
                 updateEmptyState(state.isEmpty)
             }
@@ -200,12 +208,12 @@ class DashboardFragment : Fragment() {
 
         // Botón "Ver todas" para suscripciones
         binding.buttonViewAllSubscriptions.setOnClickListener {
-            // TODO: Navegar a lista completa de suscripciones
+            navigateToSearchWithFilter("subscriptions")
         }
 
         // Botón "Ver todas" para garantías
         binding.buttonViewAllWarranties.setOnClickListener {
-            // TODO: Navegar a lista completa de garantías
+            navigateToSearchWithFilter("warranties")
         }
 
         // Botón de agregar primera suscripción
@@ -321,6 +329,25 @@ class DashboardFragment : Fragment() {
                 viewModel.refreshData()
             }
             .show()
+    }
+
+    /**
+     * Navegar a búsqueda con filtro específico
+     */
+    private fun navigateToSearchWithFilter(filterType: String) {
+        val bundle = Bundle().apply {
+            putString("filter_type", filterType)
+        }
+        
+        try {
+            findNavController().navigate(
+                R.id.action_dashboard_to_search,
+                bundle
+            )
+        } catch (e: Exception) {
+            // Log error y mostrar mensaje al usuario
+            showError("Error al navegar a búsqueda")
+        }
     }
 
     override fun onResume() {

@@ -82,12 +82,8 @@ abstract class AppDatabase : RoomDatabase() {
             override fun onOpen(db: SupportSQLiteDatabase) {
                 super.onOpen(db)
                 
-                // Configuraciones de rendimiento
+                // Solo configuraciones básicas y seguras
                 db.execSQL("PRAGMA foreign_keys=ON")
-                db.execSQL("PRAGMA journal_mode=WAL") // Write-Ahead Logging para mejor concurrencia
-                db.execSQL("PRAGMA synchronous=NORMAL") // Balance entre seguridad y rendimiento
-                db.execSQL("PRAGMA cache_size=10000") // Cache de 10MB aproximadamente
-                db.execSQL("PRAGMA temp_store=MEMORY") // Tablas temporales en memoria
             }
         }
 

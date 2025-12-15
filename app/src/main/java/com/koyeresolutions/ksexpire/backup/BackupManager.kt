@@ -7,6 +7,7 @@ import com.koyeresolutions.ksexpire.utils.Constants
 import com.koyeresolutions.ksexpire.utils.FileUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.InternalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -21,6 +22,7 @@ import java.util.zip.ZipOutputStream
  * Manager para backup y restauración de datos
  * IMPLEMENTA LA FUNCIONALIDAD DE BACKUP DEL PLANNING
  */
+@OptIn(InternalSerializationApi::class)
 class BackupManager(private val context: Context) {
 
     private val json = Json {
@@ -118,7 +120,8 @@ class BackupManager(private val context: Context) {
                 }
 
                 // Validar backup
-                if (metadata == null) {
+                val validMetadata = metadata
+                if (validMetadata == null) {
                     return@withContext Result.failure(Exception("Archivo de backup inválido: falta metadata"))
                 }
 
@@ -127,7 +130,7 @@ class BackupManager(private val context: Context) {
                 }
 
                 // Validar compatibilidad de versión
-                if (metadata.version > BACKUP_VERSION) {
+                if (validMetadata.version > BACKUP_VERSION) {
                     return@withContext Result.failure(Exception("Versión de backup no compatible"))
                 }
 
@@ -135,7 +138,7 @@ class BackupManager(private val context: Context) {
                     success = true,
                     itemsRestored = items.size,
                     imagesRestored = restoredImages.size,
-                    backupDate = metadata.createdAt,
+                    backupDate = validMetadata.createdAt,
                     items = items,
                     message = "Backup restaurado exitosamente"
                 )

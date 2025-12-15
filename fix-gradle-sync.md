@@ -1,28 +1,68 @@
 # ✅ SOLUCIÓN ESPECÍFICA - Java 21 + Gradle Compatibility
 
-## 🚨 PROBLEMA CRÍTICO IDENTIFICADO:
-- **Error**: "Unsupported class file major version 65"
-- **Causa**: Java 21 (version 65) + Gradle incompatibility
-- **Problema**: Gradle 8.x tiene problemas internos con Java 21
-- **SOLUCIÓN RECOMENDADA**: Usar Java 17 (más estable)
+## ✅ PROBLEMAS RESUELTOS CON JAVA 21:
 
-## 🔧 SOLUCIÓN DEFINITIVA - CAMBIAR A JAVA 17:
+### 🔧 PROBLEMA 1: Repositorios de Gradle
+- **Error**: "repository 'Google' was added by build file but FAIL_ON_PROJECT_REPOS"
+- **Causa**: Configuración de repositorios incorrecta
+- **✅ SOLUCIÓN**: Agregado repositorios al bloque `buildscript` en `build.gradle`
 
-### 1. 📥 DESCARGAR JAVA 17:
-- Ve a: https://adoptium.net/temurin/releases/?version=17
-- Descarga: **OpenJDK 17 LTS** para Windows x64
-- Instala normalmente
+### 🔧 PROBLEMA 2: Recursos faltantes
+- **Error**: "Theme.SplashScreen not found", "indicatorCornerRadius not found"
+- **Causa**: Dependencias y atributos faltantes
+- **✅ SOLUCIÓN**: 
+  - Agregada dependencia `androidx.core:core-splashscreen:1.0.1`
+  - Removido atributo incompatible `indicatorCornerRadius`
+  - Creado tema faltante `Theme.KSExpire.FullScreen`
 
-### 2. ⚙️ CONFIGURAR ANDROID STUDIO:
-1. **File** → **Settings** (Ctrl+Alt+S)
-2. **Build, Execution, Deployment** → **Gradle**
-3. **Gradle JDK**: Cambiar de Java 21 a **Java 17**
-4. **Apply** → **OK**
+### 🔧 PROBLEMA 3: KAPT + Java 21 Incompatibilidad
+- **Error**: "IllegalAccessError: KaptJavaCompiler cannot access JavaCompiler"
+- **Causa**: KAPT no es compatible con Java 21 (sistema de módulos estricto)
+- **✅ SOLUCIÓN DEFINITIVA**: **MIGRACIÓN COMPLETA DE KAPT A KSP**
 
-### 3. 🔄 REINICIAR Y SINCRONIZAR:
-1. **File** → **Invalidate Caches and Restart** → **Invalidate and Restart**
-2. Después del reinicio: **File** → **Sync Project with Gradle Files**
-3. **Debería sincronizar sin errores**
+## 🚀 MIGRACIÓN DE KAPT A KSP (SOLUCIÓN DEFINITIVA):
+
+### ✅ CAMBIOS REALIZADOS:
+
+#### 1. 📝 Plugins actualizados (`app/build.gradle`):
+```groovy
+// ANTES:
+apply plugin: 'kotlin-kapt'
+
+// DESPUÉS:
+apply plugin: 'com.google.devtools.ksp'
+```
+
+#### 2. 🔧 Dependencia KSP agregada (`build.gradle` raíz):
+```groovy
+dependencies {
+    classpath "com.google.devtools.ksp:com.google.devtools.ksp.gradle.plugin:1.9.10-1.0.13"
+}
+```
+
+#### 3. 🗄️ Room Database migrado a KSP:
+```groovy
+// ANTES:
+kapt "androidx.room:room-compiler:$room_version"
+kapt {
+    arguments {
+        arg("room.schemaLocation", "$projectDir/schemas")
+    }
+}
+
+// DESPUÉS:
+ksp "androidx.room:room-compiler:$room_version"
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+```
+
+### 🎯 BENEFICIOS DE KSP:
+- ✅ **Compatible con Java 21** (sin necesidad de cambiar versión)
+- ✅ **Más rápido** que KAPT (hasta 2x más rápido)
+- ✅ **Mejor soporte** para Kotlin moderno
+- ✅ **Recomendado por Google** para nuevos proyectos
+- ✅ **Futuro-proof** (KAPT será deprecado)
 
 ### 4. 🏗️ GENERAR APK FIRMADO:
 1. **Build** → **Generate Signed Bundle / APK**

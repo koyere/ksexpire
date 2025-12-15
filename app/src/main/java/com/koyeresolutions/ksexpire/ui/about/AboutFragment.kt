@@ -72,6 +72,11 @@ class AboutFragment : Fragment() {
                 openGitHub()
             }
 
+            // Discord
+            cardDiscord.setOnClickListener {
+                openUrl(Constants.DEVELOPER_DISCORD)
+            }
+
             // Calificar app (In-App Review)
             cardRateApp.setOnClickListener {
                 viewModel.requestInAppReview(requireActivity())

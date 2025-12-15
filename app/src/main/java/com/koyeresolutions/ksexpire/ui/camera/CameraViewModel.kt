@@ -19,8 +19,8 @@ class CameraViewModel(application: Application) : AndroidViewModel(application) 
     private val _isProcessing = MutableLiveData<Boolean>()
     val isProcessing: LiveData<Boolean> = _isProcessing
 
-    private val _processingResult = MutableLiveData<ProcessingResult>()
-    val processingResult: LiveData<ProcessingResult> = _processingResult
+    private val _processingResult = MutableLiveData<ProcessingResult?>()
+    val processingResult: LiveData<ProcessingResult?> = _processingResult
 
     /**
      * Procesar imagen capturada en segundo plano

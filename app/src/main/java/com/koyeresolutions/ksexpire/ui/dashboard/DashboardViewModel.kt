@@ -42,6 +42,12 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         loadDashboardData()
+        // Observar cambios en suscripciones para recalcular gasto mensual
+        viewModelScope.launch {
+            subscriptions.collect {
+                loadDashboardData()
+            }
+        }
     }
 
     /**

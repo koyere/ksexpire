@@ -4,15 +4,22 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-  <group android:scaleX="2.61"
-      android:scaleY="2.61"
-      android:translateX="22.68"
-      android:translateY="22.68">
+  <!-- Icono de KS Expire: Escudo con calendario/reloj -->
+  <group android:scaleX="2.2"
+      android:scaleY="2.2"
+      android:translateX="24"
+      android:translateY="24">
+    <!-- Escudo exterior (protección/garantía) -->
     <path
         android:fillColor="#FFFFFF"
-        android:pathData="M12,2C6.48,2 2,6.48 2,12s4.48,10 10,10 10,-4.48 10,-10S17.52,2 12,2zM13,17h-2v-6h2v6zM13,9h-2L11,7h2v2z"/>
+        android:pathData="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1z"/>
+    <!-- Reloj interior (vencimiento/tiempo) -->
     <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M9,11H7v6h2V11zM13,11h-2v6h2V11zM17,11h-2v6h2V11z"/>
+        android:fillColor="@color/brand_blue"
+        android:pathData="M12,6C8.69,6 6,8.69 6,12s2.69,6 6,6 6,-2.69 6,-6 -2.69,-6 -6,-6zM12,16c-2.21,0 -4,-1.79 -4,-4s1.79,-4 4,-4 4,1.79 4,4 -1.79,4 -4,4z"/>
+    <!-- Manecillas del reloj -->
+    <path
+        android:fillColor="@color/brand_blue"
+        android:pathData="M12.5,8H11v5l4.28,2.54 0.72,-1.21 -3.5,-2.08V8z"/>
   </group>
 </vector>

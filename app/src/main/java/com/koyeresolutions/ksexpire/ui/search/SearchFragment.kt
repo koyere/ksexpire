@@ -48,14 +48,39 @@ class SearchFragment : Fragment() {
         setupObservers()
         setupSearchView()
         setupFilters()
+        
+        // Procesar argumentos de navegación (filtro desde Dashboard)
+        processNavigationArguments()
+    }
+    
+    /**
+     * Procesar argumentos de navegación para aplicar filtros
+     */
+    private fun processNavigationArguments() {
+        val filterType = arguments?.getString("filter_type")
+        
+        if (!filterType.isNullOrBlank()) {
+            when (filterType) {
+                "subscriptions" -> {
+                    viewModel.setFilter(SearchViewModel.SearchFilter.SUBSCRIPTIONS)
+                    viewModel.search("")
+                }
+                "warranties" -> {
+                    viewModel.setFilter(SearchViewModel.SearchFilter.WARRANTIES)
+                    viewModel.search("")
+                }
+            }
+            // Limpiar argumentos para evitar re-aplicar en rotación
+            arguments?.remove("filter_type")
+        }
     }
 
     /**
      * Configurar elementos de UI
      */
     private fun setupUI() {
-        // Configurar estado inicial
-        showEmptyState()
+        // Cargar todos los items al iniciar (estado por defecto)
+        viewModel.search("")
     }
 
     /**
@@ -183,12 +208,12 @@ class SearchFragment : Fragment() {
      * Actualizar visibilidad de resultados
      */
     private fun updateResultsVisibility(isEmpty: Boolean) {
-        val hasQuery = viewModel.currentQuery.value.isNotBlank()
-        
-        when {
-            !hasQuery -> showEmptyState()
-            isEmpty -> showNoResultsState()
-            else -> showResultsState()
+        // Siempre mostrar resultados si hay items, o "sin resultados" si está vacío
+        // El estado inicial vacío solo se muestra antes de cualquier interacción
+        if (isEmpty) {
+            showNoResultsState()
+        } else {
+            showResultsState()
         }
     }
 

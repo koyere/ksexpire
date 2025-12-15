@@ -49,6 +49,7 @@ object Constants {
     const val DEVELOPER_WEBSITE = "https://www.koyeresolutions.com/"
     const val DEVELOPER_LINKEDIN = "https://www.linkedin.com/in/eduardo-escobar-38a888161/"
     const val DEVELOPER_GITHUB = "https://github.com/koyere"
+    const val DEVELOPER_DISCORD = "https://discord.gg/xKUjn3EJzR"
     const val DEVELOPER_EMAIL = "info@koyeresolutions.com"
     
     // Conversiones de tiempo
