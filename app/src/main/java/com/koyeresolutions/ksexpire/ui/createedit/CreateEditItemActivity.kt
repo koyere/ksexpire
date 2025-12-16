@@ -3,6 +3,8 @@ package com.koyeresolutions.ksexpire.ui.createedit
 import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -33,6 +35,7 @@ class CreateEditItemActivity : AppCompatActivity() {
     private val aboutViewModel: AboutViewModel by viewModels()
 
     private var isEditMode = false
+    private var isUpdatingUI = false // Evitar loops de actualización
 
     companion object {
         private const val REQUEST_CAMERA = 1001
@@ -66,6 +69,7 @@ class CreateEditItemActivity : AppCompatActivity() {
         setupTypeSelector()
         setupFrequencySpinner()
         setupDatePickers()
+        setupQuickDurationChips()
         setupImageSection()
         setupClickListeners()
     }
@@ -122,14 +126,83 @@ class CreateEditItemActivity : AppCompatActivity() {
         binding.buttonPurchaseDate.setOnClickListener {
             showDatePicker { timestamp ->
                 viewModel.updatePurchaseDate(timestamp)
+                // Limpiar selección de chips cuando se selecciona fecha manual
+                binding.chipGroupDuration.clearCheck()
             }
         }
         
         binding.buttonExpiryDate.setOnClickListener {
             showDatePicker { timestamp ->
                 viewModel.updateExpiryDate(timestamp)
+                // Limpiar selección de chips cuando se selecciona fecha manual
+                binding.chipGroupDuration.clearCheck()
             }
         }
+    }
+
+    /**
+     * Configurar chips de duración rápida (solo para garantías)
+     */
+    private fun setupQuickDurationChips() {
+        // Mapeo de chips a días
+        val durationMap = mapOf(
+            R.id.chip_30_days to 30,
+            R.id.chip_60_days to 60,
+            R.id.chip_90_days to 90,
+            R.id.chip_6_months to 180,
+            R.id.chip_12_months to 365,
+            R.id.chip_24_months to 730
+        )
+
+        binding.chipGroupDuration.setOnCheckedStateChangeListener { _, checkedIds ->
+            if (checkedIds.isNotEmpty()) {
+                val days = durationMap[checkedIds[0]] ?: return@setOnCheckedStateChangeListener
+                calculateExpiryFromDuration(days)
+            }
+        }
+    }
+
+    /**
+     * Calcular fecha de vencimiento basada en duración desde fecha de compra
+     */
+    private fun calculateExpiryFromDuration(days: Int) {
+        val calendar = Calendar.getInstance()
+        // Usar la fecha de compra actual como base
+        calendar.timeInMillis = viewModel.uiState.value.purchaseDate
+        calendar.add(Calendar.DAY_OF_YEAR, days)
+        viewModel.updateExpiryDate(calendar.timeInMillis)
+    }
+
+    /**
+     * Actualizar labels del formulario para suscripciones
+     */
+    private fun updateFormLabelsForSubscription() {
+        // Título del toolbar
+        if (!isEditMode) {
+            supportActionBar?.title = "Nueva Suscripción"
+        }
+        // Hints contextuales
+        binding.layoutName.helperText = getString(R.string.hint_name_subscription)
+        binding.layoutPrice.helperText = getString(R.string.hint_price_subscription)
+        // Labels de fechas
+        binding.labelPurchaseDate.text = getString(R.string.form_subscription_start_date)
+        binding.labelExpiryDate.text = getString(R.string.form_next_billing_date)
+    }
+
+    /**
+     * Actualizar labels del formulario para garantías
+     */
+    private fun updateFormLabelsForWarranty() {
+        // Título del toolbar
+        if (!isEditMode) {
+            supportActionBar?.title = "Nueva Garantía"
+        }
+        // Hints contextuales
+        binding.layoutName.helperText = getString(R.string.hint_name_warranty)
+        binding.layoutPrice.helperText = getString(R.string.hint_price_warranty)
+        // Labels de fechas
+        binding.labelPurchaseDate.text = getString(R.string.form_purchase_date)
+        binding.labelExpiryDate.text = getString(R.string.form_warranty_expiry_date)
     }
 
     /**
@@ -149,18 +222,26 @@ class CreateEditItemActivity : AppCompatActivity() {
      * Configurar listeners de clicks
      */
     private fun setupClickListeners() {
-        // Campos de texto
-        binding.editTextName.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) {
-                viewModel.updateName(binding.editTextName.text.toString())
+        // Campos de texto con TextWatcher para actualizar en tiempo real
+        binding.editTextName.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                if (!isUpdatingUI) {
+                    viewModel.updateName(s?.toString() ?: "")
+                }
             }
-        }
+        })
         
-        binding.editTextPrice.setOnFocusChangeListener { _, hasFocus ->
-            if (!hasFocus) {
-                viewModel.updatePrice(binding.editTextPrice.text.toString())
+        binding.editTextPrice.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                if (!isUpdatingUI) {
+                    viewModel.updatePrice(s?.toString() ?: "")
+                }
             }
-        }
+        })
         
         // Switch de estado activo
         binding.switchActive.setOnCheckedChangeListener { _, _ ->
@@ -248,19 +329,27 @@ class CreateEditItemActivity : AppCompatActivity() {
      * Actualizar UI según el estado
      */
     private fun updateUI(state: CreateEditItemViewModel.CreateEditUiState) {
-        // Tipo de ítem
+        isUpdatingUI = true // Evitar que TextWatcher dispare actualizaciones
+        
+        // Tipo de ítem - actualizar visibilidad y textos contextuales
         when (state.itemType) {
             Constants.ITEM_TYPE_SUBSCRIPTION -> {
                 binding.chipSubscription.isChecked = true
                 binding.layoutFrequency.visibility = View.VISIBLE
+                binding.layoutQuickDuration.visibility = View.GONE
+                // Textos contextuales para suscripciones
+                updateFormLabelsForSubscription()
             }
             Constants.ITEM_TYPE_WARRANTY -> {
                 binding.chipWarranty.isChecked = true
                 binding.layoutFrequency.visibility = View.GONE
+                binding.layoutQuickDuration.visibility = View.VISIBLE
+                // Textos contextuales para garantías
+                updateFormLabelsForWarranty()
             }
         }
         
-        // Campos de texto
+        // Campos de texto - solo actualizar si es diferente para evitar mover cursor
         if (binding.editTextName.text.toString() != state.name) {
             binding.editTextName.setText(state.name)
         }
@@ -289,6 +378,8 @@ class CreateEditItemActivity : AppCompatActivity() {
         
         // Imagen
         updateImageUI(state.imagePath)
+        
+        isUpdatingUI = false // Permitir actualizaciones de nuevo
     }
 
     /**

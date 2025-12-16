@@ -27,6 +27,13 @@
     <string name="form_price_hint">0.00</string>
     <string name="form_purchase_date">Fecha de compra</string>
     <string name="form_expiry_date">Fecha de vencimiento</string>
+    <string name="form_subscription_start_date">Fecha de inicio</string>
+    <string name="form_next_billing_date">Próximo cobro</string>
+    <string name="form_warranty_expiry_date">Vencimiento de garantía</string>
+    <string name="hint_name_subscription">Ej: Netflix, Spotify, Amazon Prime</string>
+    <string name="hint_name_warranty">Ej: TV Samsung, Laptop Dell, iPhone</string>
+    <string name="hint_price_subscription">Precio mensual de la suscripción</string>
+    <string name="hint_price_warranty">Precio de compra (opcional)</string>
     <string name="form_billing_frequency">Frecuencia de cobro</string>
     <string name="form_take_photo">Tomar foto del recibo</string>
     <string name="form_retake_photo">Cambiar foto</string>
@@ -80,7 +87,7 @@
     
     <!-- Sobre el desarrollador -->
     <string name="about_title">Sobre el Desarrollador</string>
-    <string name="about_description">Desarrollado con ❤️ por Koyere Solutions. Si te sirve esta app, compártela.</string>
+    <string name="about_description">Desarrollado por Koyere Solutions. Si te ha gustado esta app, compártela.</string>
     <string name="about_website">Sitio Web</string>
     <string name="about_linkedin">LinkedIn</string>
     <string name="about_github">GitHub</string>

@@ -140,13 +140,13 @@ class DashboardFragment : Fragment() {
         binding.recyclerSubscriptions.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = subscriptionAdapter
-            setHasFixedSize(true)
+            isNestedScrollingEnabled = false
         }
 
         binding.recyclerWarranties.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = warrantyAdapter
-            setHasFixedSize(true)
+            isNestedScrollingEnabled = false
         }
     }
 

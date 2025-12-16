@@ -62,8 +62,8 @@
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:textAppearance="?attr/textAppearanceBodyLarge"
-                    android:textColor="?attr/colorOnSurface"
-                    tools:text="Desarrollado con ❤️ por Koyere Solutions" />
+                    android:textColor="@color/brand_blue"
+                    tools:text="Desarrollado por Koyere Solutions" />
 
                 <!-- Badge de privacidad -->
                 <LinearLayout

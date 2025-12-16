@@ -14,13 +14,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="16dp">
+        android:padding="12dp">
 
-        <!-- Imagen del tipo e indicador -->
+        <!-- Icono del tipo -->
         <FrameLayout
-            android:layout_width="48dp"
-            android:layout_height="48dp"
-            android:layout_marginEnd="12dp">
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_marginEnd="12dp"
+            android:layout_gravity="center_vertical">
 
             <ImageView
                 android:id="@+id/image_type"
@@ -28,13 +29,12 @@
                 android:layout_height="32dp"
                 android:layout_gravity="center"
                 android:src="@drawable/ic_subscription"
-                app:tint="?attr/colorPrimary"
                 tools:src="@drawable/ic_subscription" />
 
             <View
                 android:id="@+id/indicator_status"
-                android:layout_width="12dp"
-                android:layout_height="12dp"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
                 android:layout_gravity="bottom|end"
                 android:background="@drawable/bg_status_indicator"
                 android:visibility="gone"
@@ -42,14 +42,28 @@
 
         </FrameLayout>
 
-        <!-- Contenido principal -->
+        <!-- Contenido principal - reorganizado -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
+            android:layout_gravity="center_vertical"
             android:orientation="vertical">
 
-            <!-- Header con nombre y tipo -->
+            <!-- Línea 1: Nombre completo -->
+            <TextView
+                android:id="@+id/text_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textAppearance="?attr/textAppearanceTitleMedium"
+                android:textColor="?attr/colorOnSurface"
+                android:textStyle="bold"
+                tools:text="Humidificador OSTER Premium XL" />
+
+            <!-- Línea 2: Tipo + Precio -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -58,69 +72,67 @@
                 android:orientation="horizontal">
 
                 <TextView
-                    android:id="@+id/text_name"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ellipsize="end"
-                    android:maxLines="1"
-                    android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="?attr/colorOnSurface"
-                    tools:text="Netflix Premium" />
-
-                <TextView
                     android:id="@+id/text_type"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
                     android:background="@drawable/bg_type_badge"
                     android:paddingHorizontal="8dp"
                     android:paddingVertical="2dp"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="?attr/colorOnSecondaryContainer"
-                    tools:text="Suscripción" />
+                    tools:text="Garantía/Recibo" />
+
+                <TextView
+                    android:id="@+id/text_price"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textAppearance="?attr/textAppearanceTitleSmall"
+                    android:textColor="?attr/colorPrimary"
+                    android:textStyle="bold"
+                    tools:text="$89.99" />
 
             </LinearLayout>
 
-            <!-- Precio -->
-            <TextView
-                android:id="@+id/text_price"
-                android:layout_width="wrap_content"
+            <!-- Línea 3: Fecha + Estado -->
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:textAppearance="?attr/textAppearanceTitleSmall"
-                android:textColor="?attr/colorPrimary"
-                android:textStyle="bold"
-                tools:text="$15.99/mes" />
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <!-- Información de fecha -->
-            <TextView
-                android:id="@+id/text_date_info"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="4dp"
-                android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                tools:text="Próximo cobro: Mañana" />
+                <TextView
+                    android:id="@+id/text_date_info"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorOnSurfaceVariant"
+                    tools:text="Vence en 45 días" />
 
-            <!-- Estado -->
-            <TextView
-                android:id="@+id/text_status"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorSecondary"
-                android:textStyle="bold"
-                tools:text="Activa" />
+                <TextView
+                    android:id="@+id/text_status"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:textAppearance="?attr/textAppearanceBodySmall"
+                    android:textColor="?attr/colorSecondary"
+                    android:textStyle="bold"
+                    tools:text="Activa" />
+
+            </LinearLayout>
 
         </LinearLayout>
 
-        <!-- Imagen del recibo -->
+        <!-- Imagen del recibo (más pequeña) -->
         <FrameLayout
-            android:layout_width="60dp"
-            android:layout_height="60dp"
+            android:id="@+id/layout_image"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_marginStart="8dp"
-            android:layout_marginEnd="8dp">
+            android:layout_gravity="center_vertical">
 
             <ImageView
                 android:id="@+id/image_receipt"
@@ -134,38 +146,39 @@
 
             <ImageView
                 android:id="@+id/icon_no_image"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_gravity="center"
-                android:alpha="0.6"
+                android:alpha="0.5"
                 android:src="@drawable/ic_receipt"
                 app:tint="?attr/colorOnSurfaceVariant" />
 
         </FrameLayout>
 
-        <!-- Botones de acción -->
+        <!-- Botones de acción (más compactos) -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_gravity="center_vertical"
             android:orientation="vertical">
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_toggle_status"
                 style="@style/Widget.Material3.Button.IconButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginBottom="4dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 app:icon="@drawable/ic_pause"
-                app:iconSize="20dp"
+                app:iconSize="18dp"
                 app:iconTint="?attr/colorOnSurfaceVariant" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/button_delete"
                 style="@style/Widget.Material3.Button.IconButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
                 app:icon="@drawable/ic_delete"
-                app:iconSize="20dp"
+                app:iconSize="18dp"
                 app:iconTint="?attr/colorError" />
 
         </LinearLayout>

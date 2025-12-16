@@ -13,7 +13,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.chip.Chip
 import com.koyeresolutions.ksexpire.R
 import com.koyeresolutions.ksexpire.databinding.FragmentSearchBinding
-import com.koyeresolutions.ksexpire.ui.createedit.CreateEditItemActivity
+import com.koyeresolutions.ksexpire.ui.detail.ItemDetailActivity
 import com.koyeresolutions.ksexpire.ui.imageviewer.ImageViewerActivity
 import com.koyeresolutions.ksexpire.ui.search.adapters.SearchResultsAdapter
 import com.koyeresolutions.ksexpire.utils.Constants
@@ -282,11 +282,11 @@ class SearchFragment : Fragment() {
     }
 
     /**
-     * Abrir actividad para editar ítem
+     * Abrir actividad de detalle del ítem
      */
     private fun openEditItem(itemId: Long) {
-        val intent = Intent(requireContext(), CreateEditItemActivity::class.java)
-        intent.putExtra("item_id", itemId)
+        val intent = Intent(requireContext(), ItemDetailActivity::class.java)
+        intent.putExtra(ItemDetailActivity.EXTRA_ITEM_ID, itemId)
         startActivity(intent)
     }
 

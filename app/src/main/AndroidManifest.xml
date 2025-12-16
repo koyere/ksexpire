@@ -76,6 +76,13 @@
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.KSExpire.FullScreen" />
 
+        <!-- Actividad de detalle de ítem -->
+        <activity
+            android:name=".ui.detail.ItemDetailActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.KSExpire.NoActionBar" />
+
         <!-- Proveedor de archivos para compartir imágenes -->
         <provider
             android:name="androidx.core.content.FileProvider"

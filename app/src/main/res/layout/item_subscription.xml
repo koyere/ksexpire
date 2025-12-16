@@ -59,7 +59,8 @@
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textAppearance="?attr/textAppearanceTitleMedium"
-                    android:textColor="?attr/colorOnSurface"
+                    android:textColor="@color/subscription_primary"
+                    android:textStyle="bold"
                     tools:text="Netflix Premium" />
 
                 <TextView
@@ -81,7 +82,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant"
+                android:textColor="#424242"
                 tools:text="Próximo cobro: Mañana" />
 
             <!-- Estado -->

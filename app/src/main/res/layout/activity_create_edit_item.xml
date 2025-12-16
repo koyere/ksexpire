@@ -109,11 +109,14 @@
 
                     <!-- Nombre -->
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/layout_name"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:hint="@string/form_name"
-                        app:startIconDrawable="@drawable/ic_label">
+                        app:startIconDrawable="@drawable/ic_label"
+                        app:helperTextEnabled="true"
+                        app:helperText="Ej: Netflix, Spotify, Amazon Prime">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/edit_text_name"
@@ -126,11 +129,14 @@
 
                     <!-- Precio -->
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/layout_price"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="16dp"
                         android:hint="@string/form_price"
-                        app:startIconDrawable="@drawable/ic_money">
+                        app:startIconDrawable="@drawable/ic_money"
+                        app:helperTextEnabled="true"
+                        app:helperText="Precio mensual de la suscripción">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/edit_text_price"
@@ -215,7 +221,7 @@
                         android:textAppearance="?attr/textAppearanceTitleMedium"
                         android:textColor="?attr/colorOnSurface" />
 
-                    <!-- Fecha de compra -->
+                    <!-- Fecha de compra/inicio -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -223,6 +229,7 @@
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/label_purchase_date"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="8dp"
@@ -241,13 +248,14 @@
 
                     </LinearLayout>
 
-                    <!-- Fecha de vencimiento -->
+                    <!-- Fecha de vencimiento/próximo cobro -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
 
                         <TextView
+                            android:id="@+id/label_expiry_date"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="8dp"
@@ -263,6 +271,77 @@
                             android:gravity="start|center_vertical"
                             app:icon="@drawable/ic_calendar"
                             tools:text="15/03/2025" />
+
+                        <!-- Duración rápida (solo para garantías) -->
+                        <LinearLayout
+                            android:id="@+id/layout_quick_duration"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:orientation="vertical"
+                            android:visibility="gone"
+                            tools:visibility="visible">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="8dp"
+                                android:text="O selecciona duración:"
+                                android:textAppearance="?attr/textAppearanceBodySmall"
+                                android:textColor="?attr/colorOnSurfaceVariant" />
+
+                            <com.google.android.material.chip.ChipGroup
+                                android:id="@+id/chip_group_duration"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:singleLine="false"
+                                app:singleSelection="true">
+
+                                <com.google.android.material.chip.Chip
+                                    android:id="@+id/chip_30_days"
+                                    style="@style/Widget.Material3.Chip.Suggestion"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="30 días" />
+
+                                <com.google.android.material.chip.Chip
+                                    android:id="@+id/chip_60_days"
+                                    style="@style/Widget.Material3.Chip.Suggestion"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="60 días" />
+
+                                <com.google.android.material.chip.Chip
+                                    android:id="@+id/chip_90_days"
+                                    style="@style/Widget.Material3.Chip.Suggestion"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="90 días" />
+
+                                <com.google.android.material.chip.Chip
+                                    android:id="@+id/chip_6_months"
+                                    style="@style/Widget.Material3.Chip.Suggestion"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="6 meses" />
+
+                                <com.google.android.material.chip.Chip
+                                    android:id="@+id/chip_12_months"
+                                    style="@style/Widget.Material3.Chip.Suggestion"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="12 meses" />
+
+                                <com.google.android.material.chip.Chip
+                                    android:id="@+id/chip_24_months"
+                                    style="@style/Widget.Material3.Chip.Suggestion"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="24 meses" />
+
+                            </com.google.android.material.chip.ChipGroup>
+
+                        </LinearLayout>
 
                     </LinearLayout>
 
