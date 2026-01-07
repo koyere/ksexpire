@@ -1,11 +1,17 @@
 package com.koyeresolutions.ksexpire.ui.about
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
+import android.provider.Settings
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import com.google.android.material.snackbar.Snackbar
@@ -23,6 +29,17 @@ class AboutFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: AboutViewModel by viewModels()
+
+    // Launcher para solicitar permiso de notificaciones
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            showSuccess("Notificaciones activadas correctamente")
+        } else {
+            showNotificationPermissionDeniedDialog()
+        }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -90,6 +107,11 @@ class AboutFragment : Fragment() {
             // Información adicional
             cardAppInfo.setOnClickListener {
                 showAppInfo()
+            }
+
+            // Configuración de notificaciones
+            cardNotifications.setOnClickListener {
+                showNotificationSettings()
             }
         }
     }
@@ -220,12 +242,11 @@ class AboutFragment : Fragment() {
         val info = """
             📱 KS Expire
             🔢 Versión: ${getAppVersion()}
-            📦 Package: ${requireContext().packageName}
             🛡️ 100% Offline y Privado
             💾 Sin cuentas ni servidores
             🔒 Datos almacenados localmente
             
-            Desarrollado con ❤️ usando:
+            Desarrollado por Koyere Dev usando:
             • Kotlin & Android Nativo
             • Material Design 3
             • Room Database
@@ -278,6 +299,157 @@ class AboutFragment : Fragment() {
      */
     private fun showError(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG).show()
+    }
+
+    /**
+     * Mostrar mensaje de éxito
+     */
+    private fun showSuccess(message: String) {
+        Snackbar.make(binding.root, message, Snackbar.LENGTH_SHORT)
+            .setBackgroundTint(ContextCompat.getColor(requireContext(), R.color.brand_green))
+            .show()
+    }
+
+    /**
+     * Mostrar configuración de notificaciones
+     */
+    private fun showNotificationSettings() {
+        val areNotificationsEnabled = areNotificationsEnabled()
+        
+        val statusIcon = if (areNotificationsEnabled) "✅" else "❌"
+        val statusText = if (areNotificationsEnabled) "Activadas" else "Desactivadas"
+        
+        val message = """
+            Estado actual: $statusIcon $statusText
+            
+            Las notificaciones te avisan:
+            • 1 día antes del cobro de suscripciones
+            • 30 y 7 días antes del vencimiento de garantías
+            
+            ${if (!areNotificationsEnabled) "⚠️ Activa las notificaciones para no perderte ningún vencimiento." else ""}
+        """.trimIndent()
+        
+        val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("🔔 Notificaciones")
+            .setMessage(message)
+            .setIcon(R.drawable.ic_notifications)
+        
+        if (areNotificationsEnabled) {
+            builder.setPositiveButton("Aceptar", null)
+            builder.setNeutralButton("Configuración") { _, _ ->
+                openNotificationSettings()
+            }
+        } else {
+            builder.setPositiveButton("Activar") { _, _ ->
+                requestNotificationPermission()
+            }
+            builder.setNegativeButton("Cancelar", null)
+        }
+        
+        builder.show()
+    }
+
+    /**
+     * Verificar si las notificaciones están habilitadas
+     */
+    private fun areNotificationsEnabled(): Boolean {
+        val notificationManager = requireContext().getSystemService(android.content.Context.NOTIFICATION_SERVICE) 
+            as android.app.NotificationManager
+        
+        // Android 13+ (API 33) requiere permiso POST_NOTIFICATIONS
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            val hasPermission = ContextCompat.checkSelfPermission(
+                requireContext(),
+                Manifest.permission.POST_NOTIFICATIONS
+            ) == PackageManager.PERMISSION_GRANTED
+            
+            return hasPermission && notificationManager.areNotificationsEnabled()
+        }
+        
+        // Android 8+ verifica si las notificaciones están habilitadas
+        return notificationManager.areNotificationsEnabled()
+    }
+
+    /**
+     * Solicitar permiso de notificaciones
+     */
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // Android 13+ requiere solicitar permiso explícito
+            when {
+                ContextCompat.checkSelfPermission(
+                    requireContext(),
+                    Manifest.permission.POST_NOTIFICATIONS
+                ) == PackageManager.PERMISSION_GRANTED -> {
+                    // Ya tiene permiso, verificar si están habilitadas en sistema
+                    openNotificationSettings()
+                }
+                shouldShowRequestPermissionRationale(Manifest.permission.POST_NOTIFICATIONS) -> {
+                    // Usuario rechazó antes, mostrar explicación
+                    showNotificationPermissionRationale()
+                }
+                else -> {
+                    // Solicitar permiso
+                    notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                }
+            }
+        } else {
+            // Android < 13, abrir configuración del sistema
+            openNotificationSettings()
+        }
+    }
+
+    /**
+     * Mostrar explicación de por qué se necesitan notificaciones
+     */
+    private fun showNotificationPermissionRationale() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Permiso necesario")
+            .setMessage("Las notificaciones son necesarias para avisarte antes de que venzan tus suscripciones y garantías.\n\n¿Deseas activarlas?")
+            .setPositiveButton("Activar") { _, _ ->
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            .setNegativeButton("Cancelar", null)
+            .setIcon(R.drawable.ic_notifications)
+            .show()
+    }
+
+    /**
+     * Mostrar diálogo cuando el permiso fue denegado
+     */
+    private fun showNotificationPermissionDeniedDialog() {
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Permiso denegado")
+            .setMessage("Para recibir recordatorios de vencimientos, debes activar las notificaciones manualmente en la configuración del sistema.")
+            .setPositiveButton("Ir a Configuración") { _, _ ->
+                openNotificationSettings()
+            }
+            .setNegativeButton("Cancelar", null)
+            .setIcon(R.drawable.ic_notifications)
+            .show()
+    }
+
+    /**
+     * Abrir configuración de notificaciones del sistema
+     */
+    private fun openNotificationSettings() {
+        try {
+            val intent = Intent().apply {
+                when {
+                    Build.VERSION.SDK_INT >= Build.VERSION_CODES.O -> {
+                        action = Settings.ACTION_APP_NOTIFICATION_SETTINGS
+                        putExtra(Settings.EXTRA_APP_PACKAGE, requireContext().packageName)
+                    }
+                    else -> {
+                        action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                        data = Uri.parse("package:${requireContext().packageName}")
+                    }
+                }
+            }
+            startActivity(intent)
+        } catch (e: Exception) {
+            showError("No se pudo abrir la configuración")
+        }
     }
 
     override fun onDestroyView() {

@@ -95,6 +95,8 @@
     <string name="about_rate_app">Calificar App</string>
     <string name="about_contact">Contacto / Feedback</string>
     <string name="about_contact_subject">Feedback sobre KS Expire</string>
+    <string name="about_notifications">Notificaciones</string>
+    <string name="about_notifications_desc">Recordatorios de vencimientos</string>
     
     <!-- Mensajes generales -->
     <string name="message_photo_backup">La foto es respaldo. Los datos los controlas tú.</string>
