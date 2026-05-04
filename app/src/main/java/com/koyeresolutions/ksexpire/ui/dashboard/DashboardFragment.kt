@@ -62,6 +62,8 @@ class DashboardFragment : Fragment() {
      * Configurar menú del dashboard
      */
     private fun setupMenu() {
+        // Inflar menú programáticamente para asegurar que funcione
+        binding.toolbar.inflateMenu(R.menu.menu_dashboard)
         binding.toolbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.action_backup -> {

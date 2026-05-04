@@ -247,9 +247,12 @@ class ReportsFragment : Fragment() {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT, 1
                     )
-                    val dividerColor = android.util.TypedValue()
-                    requireContext().theme.resolveAttribute(com.google.android.material.R.attr.colorOutlineVariant, dividerColor, true)
-                    setBackgroundColor(requireContext().getColor(dividerColor.resourceId))
+                    setBackgroundColor(
+                        com.google.android.material.color.MaterialColors.getColor(
+                            requireView(),
+                            com.google.android.material.R.attr.colorOutlineVariant
+                        )
+                    )
                 }
                 container.addView(divider)
             }
@@ -257,9 +260,10 @@ class ReportsFragment : Fragment() {
     }
 
     private fun getTextColor(): Int {
-        val typedValue = android.util.TypedValue()
-        requireContext().theme.resolveAttribute(com.google.android.material.R.attr.colorOnSurface, typedValue, true)
-        return requireContext().getColor(typedValue.resourceId)
+        return com.google.android.material.color.MaterialColors.getColor(
+            requireView(),
+            com.google.android.material.R.attr.colorOnSurface
+        )
     }
 
     private fun isDarkMode(): Boolean {
