@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.koyeresolutions.ksexpire.MainActivity
 import com.koyeresolutions.ksexpire.R
@@ -24,9 +25,61 @@ class NotificationManager(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     companion object {
+        private const val TAG = "NotificationManager"
         private const val SUBSCRIPTION_NOTIFICATION_ID_BASE = 100000
         private const val WARRANTY_30_DAYS_NOTIFICATION_ID_BASE = 200000
         private const val WARRANTY_7_DAYS_NOTIFICATION_ID_BASE = 300000
+    }
+
+    /**
+     * Programar alarma exacta de forma segura
+     * Verifica permisos en Android 12+ antes de programar
+     * Si no tiene permiso de alarma exacta, usa alarma inexacta como fallback
+     */
+    private fun scheduleExactAlarmSafely(triggerTime: Long, pendingIntent: PendingIntent) {
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                } else {
+                    // Fallback: usar alarma inexacta (puede tener hasta 10 min de retraso)
+                    Log.w(TAG, "No tiene permiso de alarma exacta, usando setAndAllowWhileIdle")
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                }
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+            } else {
+                alarmManager.setExact(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+            }
+        } catch (e: SecurityException) {
+            Log.e(TAG, "SecurityException al programar alarma: ${e.message}")
+            // Fallback seguro
+            try {
+                alarmManager.setAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+            } catch (e2: Exception) {
+                Log.e(TAG, "Error total al programar alarma: ${e2.message}")
+            }
+        }
     }
 
     /**
@@ -49,34 +102,26 @@ class NotificationManager(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Programar alarma exacta
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                notificationTime,
-                pendingIntent
-            )
-        } else {
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                notificationTime,
-                pendingIntent
-            )
-        }
+        // Programar alarma exacta de forma segura
+        scheduleExactAlarmSafely(notificationTime, pendingIntent)
     }
 
     /**
      * Programar notificaciones para garantía
-     * Notifica 30 días y 7 días antes del vencimiento
+     * Notifica 30 días y 7 días antes del vencimiento (configurable)
      */
-    fun scheduleWarrantyNotifications(item: Item) {
+    fun scheduleWarrantyNotifications(item: Item, schedule30Days: Boolean = true, schedule7Days: Boolean = true) {
         if (!item.isWarranty() || !item.isActive) return
 
         // Notificación 30 días antes
-        scheduleWarrantyNotification(item, 30, NotificationType.WARRANTY_30_DAYS)
+        if (schedule30Days) {
+            scheduleWarrantyNotification(item, 30, NotificationType.WARRANTY_30_DAYS)
+        }
         
         // Notificación 7 días antes
-        scheduleWarrantyNotification(item, 7, NotificationType.WARRANTY_7_DAYS)
+        if (schedule7Days) {
+            scheduleWarrantyNotification(item, 7, NotificationType.WARRANTY_7_DAYS)
+        }
     }
 
     /**
@@ -96,20 +141,8 @@ class NotificationManager(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        // Programar alarma exacta
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                notificationTime,
-                pendingIntent
-            )
-        } else {
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                notificationTime,
-                pendingIntent
-            )
-        }
+        // Programar alarma exacta de forma segura
+        scheduleExactAlarmSafely(notificationTime, pendingIntent)
     }
 
     /**

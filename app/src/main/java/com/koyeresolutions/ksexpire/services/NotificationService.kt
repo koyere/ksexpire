@@ -3,31 +3,64 @@ package com.koyeresolutions.ksexpire.services
 import android.content.Context
 import com.koyeresolutions.ksexpire.data.entities.Item
 import com.koyeresolutions.ksexpire.notifications.NotificationManager
+import com.koyeresolutions.ksexpire.utils.Constants
 
 /**
  * Servicio para gestionar notificaciones de ítems
  * Actúa como capa de abstracción entre Repository y NotificationManager
+ * Respeta las preferencias del usuario para cada tipo de notificación
  */
 class NotificationService(private val context: Context) {
 
     private val notificationManager = NotificationManager(context)
+    
+    private val preferences by lazy {
+        context.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
+    /**
+     * Verificar si las notificaciones de suscripciones están habilitadas
+     */
+    private fun isSubscriptionNotificationsEnabled(): Boolean {
+        return preferences.getBoolean("notifications_subscriptions_enabled", true)
+    }
+
+    /**
+     * Verificar si las notificaciones de garantía a 30 días están habilitadas
+     */
+    private fun isWarranty30NotificationsEnabled(): Boolean {
+        return preferences.getBoolean("notifications_warranty_30_enabled", true)
+    }
+
+    /**
+     * Verificar si las notificaciones de garantía a 7 días están habilitadas
+     */
+    private fun isWarranty7NotificationsEnabled(): Boolean {
+        return preferences.getBoolean("notifications_warranty_7_enabled", true)
+    }
 
     /**
      * Programar notificaciones para un ítem nuevo o actualizado
+     * Respeta las preferencias del usuario
      */
     fun scheduleItemNotifications(item: Item) {
         if (!item.isActive) {
-            // Si el ítem está inactivo, cancelar notificaciones
             cancelItemNotifications(item)
             return
         }
 
         when {
-            item.isSubscription() -> {
+            item.isSubscription() && isSubscriptionNotificationsEnabled() -> {
                 notificationManager.scheduleSubscriptionNotification(item)
             }
             item.isWarranty() -> {
-                notificationManager.scheduleWarrantyNotifications(item)
+                if (isWarranty30NotificationsEnabled() || isWarranty7NotificationsEnabled()) {
+                    notificationManager.scheduleWarrantyNotifications(
+                        item,
+                        schedule30Days = isWarranty30NotificationsEnabled(),
+                        schedule7Days = isWarranty7NotificationsEnabled()
+                    )
+                }
             }
         }
     }
@@ -43,41 +76,32 @@ class NotificationService(private val context: Context) {
      * Reprogramar notificaciones después de cambios
      */
     fun rescheduleItemNotifications(oldItem: Item, newItem: Item) {
-        // Cancelar notificaciones anteriores
         cancelItemNotifications(oldItem)
-        
-        // Programar nuevas notificaciones
         scheduleItemNotifications(newItem)
     }
 
     /**
      * Verificar y programar notificaciones inmediatas para ítems que vencen pronto
+     * Respeta las preferencias del usuario
      */
     suspend fun checkImmediateNotifications(items: List<Item>) {
-        val now = System.currentTimeMillis()
-        
         items.filter { it.isActive }.forEach { item ->
             val daysUntilExpiry = item.getDaysUntilExpiry()
             
             when {
-                // Suscripciones que vencen mañana
-                item.isSubscription() && daysUntilExpiry == 1 -> {
+                item.isSubscription() && daysUntilExpiry == 1 && isSubscriptionNotificationsEnabled() -> {
                     notificationManager.showNotification(
                         item, 
                         NotificationManager.NotificationType.SUBSCRIPTION
                     )
                 }
-                
-                // Garantías que vencen en 30 días
-                item.isWarranty() && daysUntilExpiry == 30 -> {
+                item.isWarranty() && daysUntilExpiry == 30 && isWarranty30NotificationsEnabled() -> {
                     notificationManager.showNotification(
                         item, 
                         NotificationManager.NotificationType.WARRANTY_30_DAYS
                     )
                 }
-                
-                // Garantías que vencen en 7 días
-                item.isWarranty() && daysUntilExpiry == 7 -> {
+                item.isWarranty() && daysUntilExpiry == 7 && isWarranty7NotificationsEnabled() -> {
                     notificationManager.showNotification(
                         item, 
                         NotificationManager.NotificationType.WARRANTY_7_DAYS
@@ -92,20 +116,24 @@ class NotificationService(private val context: Context) {
      */
     suspend fun getNotificationStats(items: List<Item>): NotificationStats {
         val activeItems = items.filter { it.isActive }
-        val subscriptionsWithNotifications = activeItems.count { it.isSubscription() }
+        val subscriptionsWithNotifications = if (isSubscriptionNotificationsEnabled()) {
+            activeItems.count { it.isSubscription() }
+        } else 0
         val warrantiesWithNotifications = activeItems.count { it.isWarranty() }
+        val warrantyNotificationsPerItem = (if (isWarranty30NotificationsEnabled()) 1 else 0) +
+                (if (isWarranty7NotificationsEnabled()) 1 else 0)
         
         val upcomingNotifications = activeItems.count { item ->
             val days = item.getDaysUntilExpiry()
             when {
-                item.isSubscription() -> days <= 1
-                item.isWarranty() -> days <= 30
+                item.isSubscription() && isSubscriptionNotificationsEnabled() -> days <= 1
+                item.isWarranty() && (isWarranty30NotificationsEnabled() || isWarranty7NotificationsEnabled()) -> days <= 30
                 else -> false
             }
         }
         
         return NotificationStats(
-            totalScheduled = subscriptionsWithNotifications + (warrantiesWithNotifications * 2),
+            totalScheduled = subscriptionsWithNotifications + (warrantiesWithNotifications * warrantyNotificationsPerItem),
             subscriptionsScheduled = subscriptionsWithNotifications,
             warrantiesScheduled = warrantiesWithNotifications,
             upcomingNotifications = upcomingNotifications

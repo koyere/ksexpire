@@ -75,6 +75,10 @@
     <string name="notification_subscription_text_no_price">Se renovará mañana</string>
     <string name="notification_warranty_title">Garantía por vencer: %1$s</string>
     <string name="notification_warranty_text">Vence en %1$d días</string>
+    <string name="notification_permission_title">Permitir notificaciones</string>
+    <string name="notification_permission_rationale">KS Expire necesita enviar notificaciones para recordarte sobre cobros de suscripciones y vencimientos de garantías. Sin este permiso, no recibirás recordatorios.</string>
+    <string name="exact_alarm_permission_title">Alarmas exactas</string>
+    <string name="exact_alarm_permission_rationale">Para que los recordatorios lleguen en el momento exacto, KS Expire necesita permiso para programar alarmas exactas. Esto asegura que recibas la notificación el día correcto.</string>
     
     <!-- Backup -->
     <string name="backup_export">Exportar copia de seguridad</string>
