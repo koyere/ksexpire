@@ -18,6 +18,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.koyeresolutions.ksexpire.R
 import com.koyeresolutions.ksexpire.databinding.ActivityCameraBinding
 import com.koyeresolutions.ksexpire.utils.FileUtils
+import com.koyeresolutions.ksexpire.ocr.OcrProcessor
+import com.koyeresolutions.ksexpire.ocr.OcrResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,6 +36,8 @@ class CameraActivity : AppCompatActivity() {
     private lateinit var binding: ActivityCameraBinding
     private var imageCapture: ImageCapture? = null
     private lateinit var cameraExecutor: ExecutorService
+    private val ocrProcessor = OcrProcessor()
+    private var enableOcr = false
 
     companion object {
         private const val TAG = "CameraActivity"
@@ -59,6 +63,9 @@ class CameraActivity : AppCompatActivity() {
         
         setupUI()
         checkPermissionsAndStartCamera()
+        
+        // Verificar si se debe ejecutar OCR
+        enableOcr = intent.getBooleanExtra("enable_ocr", false)
         
         cameraExecutor = Executors.newSingleThreadExecutor()
     }
@@ -228,19 +235,38 @@ class CameraActivity : AppCompatActivity() {
                 // Guardar imagen comprimida
                 val savedImagePath = FileUtils.saveCompressedImage(resizedBitmap, this@CameraActivity)
 
-                // Liberar bitmaps intermedios
-                if (correctedBitmap !== bitmap) bitmap.recycle()
-                if (resizedBitmap !== correctedBitmap) correctedBitmap.recycle()
-                resizedBitmap.recycle()
-
                 if (savedImagePath != null) {
                     // Limpiar archivo temporal
                     java.io.File(tempImagePath).delete()
+
+                    // Ejecutar OCR si está habilitado
+                    var ocrName: String? = null
+                    var ocrPrice: Double? = null
+                    var ocrDate: Long? = null
+                    
+                    if (enableOcr) {
+                        try {
+                            val ocrResult = ocrProcessor.processImage(resizedBitmap)
+                            ocrName = ocrResult.detectedName
+                            ocrPrice = ocrResult.detectedPrice
+                            ocrDate = ocrResult.detectedDate
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error en OCR", e)
+                        }
+                    }
+
+                    // Liberar bitmaps intermedios
+                    if (correctedBitmap !== bitmap) bitmap.recycle()
+                    if (resizedBitmap !== correctedBitmap) correctedBitmap.recycle()
+                    resizedBitmap.recycle()
 
                     // Retornar resultado en main thread
                     withContext(Dispatchers.Main) {
                         val resultIntent = Intent().apply {
                             putExtra("image_path", savedImagePath)
+                            putExtra("ocr_name", ocrName)
+                            if (ocrPrice != null) putExtra("ocr_price", ocrPrice)
+                            if (ocrDate != null) putExtra("ocr_date", ocrDate)
                         }
                         setResult(RESULT_OK, resultIntent)
                         finish()
@@ -340,5 +366,6 @@ class CameraActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         cameraExecutor.shutdown()
+        ocrProcessor.close()
     }
 }

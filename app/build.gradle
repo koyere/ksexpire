@@ -182,6 +182,9 @@ dependencies {
     // MPAndroidChart para gráficas de reportes
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
     
+    // ML Kit OCR (offline, no requiere internet)
+    implementation 'com.google.mlkit:text-recognition:16.0.1'
+    
     // Kotlinx Serialization para JSON
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
     

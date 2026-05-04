@@ -62,7 +62,6 @@ class DashboardFragment : Fragment() {
      * Configurar menú del dashboard
      */
     private fun setupMenu() {
-        // Inflar menú programáticamente para asegurar que funcione
         binding.toolbar.inflateMenu(R.menu.menu_dashboard)
         binding.toolbar.setOnMenuItemClickListener { menuItem ->
             when (menuItem.itemId) {
@@ -72,10 +71,6 @@ class DashboardFragment : Fragment() {
                 }
                 R.id.action_settings -> {
                     openNotificationSettings()
-                    true
-                }
-                R.id.action_about -> {
-                    openAboutActivity()
                     true
                 }
                 else -> false
@@ -299,14 +294,6 @@ class DashboardFragment : Fragment() {
      */
     private fun openNotificationSettings() {
         val intent = Intent(requireContext(), NotificationSettingsActivity::class.java)
-        startActivity(intent)
-    }
-
-    /**
-     * Abrir pantalla Acerca de
-     */
-    private fun openAboutActivity() {
-        val intent = Intent(requireContext(), com.koyeresolutions.ksexpire.ui.about.AboutActivity::class.java)
         startActivity(intent)
     }
 

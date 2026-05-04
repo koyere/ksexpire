@@ -44,10 +44,21 @@ class CreateEditItemActivity : AppCompatActivity() {
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
         if (result.resultCode == RESULT_OK) {
-            val imagePath = result.data?.getStringExtra("image_path")
+            val data = result.data
+            val imagePath = data?.getStringExtra("image_path")
             if (imagePath != null) {
                 viewModel.updateImagePath(imagePath)
-                showSuccess("Foto guardada correctamente")
+                
+                // Procesar resultados OCR si hay
+                val ocrName = data.getStringExtra("ocr_name")
+                val ocrPrice = if (data.hasExtra("ocr_price")) data.getDoubleExtra("ocr_price", 0.0) else null
+                val ocrDate = if (data.hasExtra("ocr_date")) data.getLongExtra("ocr_date", 0L) else null
+                
+                if (ocrName != null || ocrPrice != null || ocrDate != null) {
+                    showOcrConfirmationDialog(ocrName, ocrPrice, ocrDate)
+                } else {
+                    showSuccess("Foto guardada correctamente")
+                }
             }
         }
     }
@@ -572,6 +583,7 @@ class CreateEditItemActivity : AppCompatActivity() {
      */
     private fun openCamera() {
         val intent = Intent(this, CameraActivity::class.java)
+        intent.putExtra("enable_ocr", true)
         cameraLauncher.launch(intent)
     }
 
@@ -654,6 +666,42 @@ class CreateEditItemActivity : AppCompatActivity() {
         viewModel.updatePrice(binding.editTextPrice.text.toString())
         
         viewModel.saveItem()
+    }
+
+    /**
+     * Mostrar diálogo de confirmación de datos OCR
+     */
+    private fun showOcrConfirmationDialog(name: String?, price: Double?, date: Long?) {
+        val message = buildString {
+            append("Detectamos estos datos del recibo:\n\n")
+            if (name != null) append("📝 Nombre: $name\n")
+            if (price != null) append("💰 Precio: $${String.format("%.2f", price)}\n")
+            if (date != null) append("📅 Fecha: ${DateUtils.formatDate(date)}\n")
+            append("\n¿Deseas usar estos datos?")
+        }
+
+        MaterialAlertDialogBuilder(this)
+            .setTitle("📷 Datos detectados")
+            .setMessage(message)
+            .setPositiveButton("Usar datos") { _, _ ->
+                // Aplicar datos OCR al formulario
+                if (name != null && viewModel.uiState.value.name.isBlank()) {
+                    viewModel.updateName(name)
+                    binding.editTextName.setText(name)
+                }
+                if (price != null && viewModel.uiState.value.price.isBlank()) {
+                    viewModel.updatePrice(price.toString())
+                    binding.editTextPrice.setText(String.format("%.2f", price))
+                }
+                if (date != null) {
+                    viewModel.updatePurchaseDate(date)
+                }
+                showSuccess("Datos aplicados correctamente")
+            }
+            .setNegativeButton("Ignorar") { _, _ ->
+                showSuccess("Foto guardada correctamente")
+            }
+            .show()
     }
 
     /**
