@@ -21,6 +21,7 @@ import com.koyeresolutions.ksexpire.databinding.ActivityCreateEditItemBinding
 import com.koyeresolutions.ksexpire.ui.about.AboutViewModel
 import com.koyeresolutions.ksexpire.ui.camera.CameraActivity
 import com.koyeresolutions.ksexpire.utils.Constants
+import com.koyeresolutions.ksexpire.utils.CurrencyUtils
 import com.koyeresolutions.ksexpire.utils.DateUtils
 import com.koyeresolutions.ksexpire.utils.FileUtils
 import kotlinx.coroutines.launch
@@ -399,6 +400,15 @@ class CreateEditItemActivity : AppCompatActivity() {
                 showValidationErrors(errors)
             }
         }
+
+        // Detección de duplicados
+        viewModel.duplicateItem.observe(this) { duplicate ->
+            if (duplicate != null) {
+                showDuplicateWarning(duplicate)
+            } else {
+                binding.cardDuplicateWarning.visibility = View.GONE
+            }
+        }
         
         // Resultado de guardado
         viewModel.saveResult.observe(this) { result ->
@@ -531,6 +541,32 @@ class CreateEditItemActivity : AppCompatActivity() {
             }
         } else {
             showNoImageState()
+        }
+    }
+
+    /**
+     * Mostrar banner de advertencia de duplicado
+     */
+    private fun showDuplicateWarning(duplicate: com.koyeresolutions.ksexpire.data.entities.Item) {
+        binding.cardDuplicateWarning.visibility = View.VISIBLE
+        
+        val message = if (duplicate.price != null) {
+            getString(R.string.duplicate_warning, duplicate.name, 
+                CurrencyUtils.formatSubscriptionPrice(this, duplicate.price, duplicate.billingFrequency))
+        } else {
+            getString(R.string.duplicate_warning_no_price, duplicate.name)
+        }
+        binding.textDuplicateMessage.text = message
+        
+        binding.buttonViewDuplicate.setOnClickListener {
+            // Abrir el ítem existente
+            val intent = Intent(this, com.koyeresolutions.ksexpire.ui.detail.ItemDetailActivity::class.java)
+            intent.putExtra(com.koyeresolutions.ksexpire.ui.detail.ItemDetailActivity.EXTRA_ITEM_ID, duplicate.id)
+            startActivity(intent)
+        }
+        
+        binding.buttonDismissDuplicate.setOnClickListener {
+            viewModel.dismissDuplicate()
         }
     }
 

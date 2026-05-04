@@ -32,6 +32,9 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
     private val _validationErrors = MutableLiveData<List<String>>()
     val validationErrors: LiveData<List<String>> = _validationErrors
 
+    private val _duplicateItem = MutableLiveData<Item?>()
+    val duplicateItem: LiveData<Item?> = _duplicateItem
+
     private val _saveResult = MutableLiveData<SaveResult?>()
     val saveResult: LiveData<SaveResult?> = _saveResult
 
@@ -117,6 +120,35 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
     fun updateName(name: String) {
         _uiState.value = _uiState.value.copy(name = name)
         validateField()
+        checkForDuplicates(name)
+    }
+
+    /**
+     * Verificar si hay ítems duplicados con nombre similar
+     */
+    private fun checkForDuplicates(name: String) {
+        if (name.length < 3) {
+            _duplicateItem.value = null
+            return
+        }
+        viewModelScope.launch {
+            try {
+                val allItems = repository.getAllActiveItemsList()
+                val currentId = if (isEditMode) currentItem?.id else null
+                val similar = com.koyeresolutions.ksexpire.utils.DuplicateDetector
+                    .findSimilarItems(name, allItems, currentId)
+                _duplicateItem.value = similar.firstOrNull()
+            } catch (e: Exception) {
+                _duplicateItem.value = null
+            }
+        }
+    }
+
+    /**
+     * Descartar alerta de duplicado
+     */
+    fun dismissDuplicate() {
+        _duplicateItem.value = null
     }
 
     /**

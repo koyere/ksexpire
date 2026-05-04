@@ -30,6 +30,11 @@ class ItemRepository(
     fun getAllActiveItems(): Flow<List<Item>> = itemDao.getAllActiveItems()
 
     /**
+     * Obtener todos los ítems activos (suspend)
+     */
+    suspend fun getAllActiveItemsList(): List<Item> = itemDao.getAllActiveItemsList()
+
+    /**
      * Obtener ítem por ID
      */
     suspend fun getItemById(id: Long): Item? = itemDao.getItemById(id)

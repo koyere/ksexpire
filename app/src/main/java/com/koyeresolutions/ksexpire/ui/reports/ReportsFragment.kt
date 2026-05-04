@@ -110,14 +110,18 @@ class ReportsFragment : Fragment() {
 
         val dataSet = BarDataSet(entries, "").apply {
             this.colors = colors
-            valueTextSize = 11f
+            valueTextSize = 12f
             valueTextColor = getTextColor()
             setDrawValues(true)
         }
 
         val isDark = isDarkMode()
+        val chartTextColor = getTextColor()
         binding.chartCategories.apply {
-            data = BarData(dataSet)
+            data = BarData(dataSet).apply {
+                setValueTextColor(chartTextColor)
+                setValueTextSize(12f)
+            }
             description.isEnabled = false
             legend.isEnabled = false
             setFitBars(true)
@@ -128,12 +132,12 @@ class ReportsFragment : Fragment() {
                 position = XAxis.XAxisPosition.BOTTOM
                 granularity = 1f
                 setDrawGridLines(false)
-                textColor = getTextColor()
+                textColor = chartTextColor
                 textSize = 10f
             }
             axisLeft.apply {
                 axisMinimum = 0f
-                textColor = getTextColor()
+                textColor = chartTextColor
                 setDrawGridLines(true)
                 gridColor = if (isDark) Color.parseColor("#333333") else Color.parseColor("#E0E0E0")
             }
@@ -260,10 +264,9 @@ class ReportsFragment : Fragment() {
     }
 
     private fun getTextColor(): Int {
-        return com.google.android.material.color.MaterialColors.getColor(
-            requireView(),
-            com.google.android.material.R.attr.colorOnSurface
-        )
+        // Usar approach directo que siempre funciona
+        val isDark = isDarkMode()
+        return if (isDark) Color.parseColor("#E6E0E5") else Color.parseColor("#1C1B1F")
     }
 
     private fun isDarkMode(): Boolean {

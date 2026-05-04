@@ -22,6 +22,12 @@ interface ItemDao {
     fun getAllActiveItems(): Flow<List<Item>>
 
     /**
+     * Obtener todos los ítems activos (suspend, para operaciones puntuales)
+     */
+    @Query("SELECT * FROM items WHERE isActive = 1 ORDER BY name ASC")
+    suspend fun getAllActiveItemsList(): List<Item>
+
+    /**
      * Obtener todos los ítems (incluyendo inactivos) para backup
      */
     @Query("SELECT * FROM items ORDER BY createdAt DESC")
