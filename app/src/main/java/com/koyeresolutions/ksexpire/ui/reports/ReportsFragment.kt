@@ -112,6 +112,7 @@ class ReportsFragment : Fragment() {
             this.colors = colors
             valueTextSize = 11f
             valueTextColor = getTextColor()
+            setDrawValues(true)
         }
 
         val isDark = isDarkMode()
@@ -180,6 +181,8 @@ class ReportsFragment : Fragment() {
             setCenterText("Total\n${CurrencyUtils.formatPrice(requireContext(), total)}")
             setCenterTextSize(12f)
             setCenterTextColor(getTextColor())
+            setEntryLabelColor(getTextColor())
+            setEntryLabelTextSize(10f)
             legend.apply {
                 isEnabled = true
                 textColor = getTextColor()
@@ -244,7 +247,9 @@ class ReportsFragment : Fragment() {
                     layoutParams = LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT, 1
                     )
-                    setBackgroundColor(requireContext().getColor(R.color.md_theme_light_outlineVariant))
+                    val dividerColor = android.util.TypedValue()
+                    requireContext().theme.resolveAttribute(com.google.android.material.R.attr.colorOutlineVariant, dividerColor, true)
+                    setBackgroundColor(requireContext().getColor(dividerColor.resourceId))
                 }
                 container.addView(divider)
             }
@@ -253,7 +258,7 @@ class ReportsFragment : Fragment() {
 
     private fun getTextColor(): Int {
         val typedValue = android.util.TypedValue()
-        requireContext().theme.resolveAttribute(android.R.attr.textColorPrimary, typedValue, true)
+        requireContext().theme.resolveAttribute(com.google.android.material.R.attr.colorOnSurface, typedValue, true)
         return requireContext().getColor(typedValue.resourceId)
     }
 

@@ -3,13 +3,8 @@ package com.koyeresolutions.ksexpire.ui.dashboard
 import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.MenuHost
-import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -67,30 +62,23 @@ class DashboardFragment : Fragment() {
      * Configurar menú del dashboard
      */
     private fun setupMenu() {
-        val menuHost: MenuHost = requireActivity()
-        menuHost.addMenuProvider(object : MenuProvider {
-            override fun onCreateMenu(menu: Menu, menuInflater: MenuInflater) {
-                menuInflater.inflate(R.menu.menu_dashboard, menu)
-            }
-
-            override fun onMenuItemSelected(menuItem: MenuItem): Boolean {
-                return when (menuItem.itemId) {
-                    R.id.action_backup -> {
-                        openBackupActivity()
-                        true
-                    }
-                    R.id.action_settings -> {
-                        openNotificationSettings()
-                        true
-                    }
-                    R.id.action_about -> {
-                        openAboutActivity()
-                        true
-                    }
-                    else -> false
+        binding.toolbar.setOnMenuItemClickListener { menuItem ->
+            when (menuItem.itemId) {
+                R.id.action_backup -> {
+                    openBackupActivity()
+                    true
                 }
+                R.id.action_settings -> {
+                    openNotificationSettings()
+                    true
+                }
+                R.id.action_about -> {
+                    openAboutActivity()
+                    true
+                }
+                else -> false
             }
-        }, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        }
     }
 
     /**
@@ -159,12 +147,12 @@ class DashboardFragment : Fragment() {
      */
     private fun setupObservers() {
         // Observar gasto mensual
-        viewModel.monthlyExpense.observe(viewLifecycleOwner, Observer { expense ->
+        viewModel.monthlyExpense.observe(viewLifecycleOwner, Observer { _ ->
             binding.textMonthlyExpense.text = viewModel.getFormattedMonthlyExpense()
         })
 
         // Observar proyección anual
-        viewModel.annualProjection.observe(viewLifecycleOwner, Observer { annual ->
+        viewModel.annualProjection.observe(viewLifecycleOwner, Observer { _ ->
             val formatted = viewModel.getFormattedAnnualProjection()
             binding.textAnnualProjection.text = getString(R.string.dashboard_annual_projection, formatted)
         })
