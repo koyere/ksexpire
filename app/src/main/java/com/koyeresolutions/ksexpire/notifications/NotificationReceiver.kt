@@ -23,15 +23,22 @@ class NotificationReceiver : BroadcastReceiver() {
         val notificationType = NotificationManager.NotificationType.values().getOrNull(notificationTypeOrdinal)
             ?: return
 
-        // Procesar notificación en corrutina
-        val scope = CoroutineScope(Dispatchers.IO)
-        scope.launch {
-            processNotification(context, itemId, notificationType)
+        // Usar goAsync() para mantener el BroadcastReceiver vivo mientras la coroutine trabaja
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                processNotification(context, itemId, notificationType)
+            } catch (e: Exception) {
+                e.printStackTrace()
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
     /**
      * Procesar y mostrar notificación
+     * Usa transacción de BD para evitar condiciones de carrera al actualizar expiryDate
      */
     private suspend fun processNotification(
         context: Context,
@@ -49,17 +56,25 @@ class NotificationReceiver : BroadcastReceiver() {
                 
                 // Reprogramar próxima notificación si es suscripción
                 if (item.isSubscription() && notificationType == NotificationManager.NotificationType.SUBSCRIPTION) {
-                    // Actualizar fecha de próximo cobro
-                    val nextBillingDate = item.getNextBillingDate()
-                    if (nextBillingDate != null) {
-                        val updatedItem = item.copy(
-                            expiryDate = nextBillingDate,
-                            updatedAt = System.currentTimeMillis()
-                        )
-                        database.itemDao().updateItem(updatedItem)
-                        
-                        // Programar siguiente notificación
-                        notificationManager.scheduleSubscriptionNotification(updatedItem)
+                    // Usar transacción para leer-modificar-escribir de forma atómica
+                    database.runInTransaction {
+                        kotlinx.coroutines.runBlocking {
+                            // Re-leer el ítem dentro de la transacción para evitar sobreescribir cambios del usuario
+                            val freshItem = database.itemDao().getItemById(itemId)
+                            if (freshItem != null && freshItem.isActive && freshItem.isSubscription()) {
+                                val nextBillingDate = freshItem.getNextBillingDate()
+                                if (nextBillingDate != null) {
+                                    val updatedItem = freshItem.copy(
+                                        expiryDate = nextBillingDate,
+                                        updatedAt = System.currentTimeMillis()
+                                    )
+                                    database.itemDao().updateItem(updatedItem)
+                                    
+                                    // Programar siguiente notificación
+                                    notificationManager.scheduleSubscriptionNotification(updatedItem)
+                                }
+                            }
+                        }
                     }
                 }
             }

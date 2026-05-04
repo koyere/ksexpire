@@ -24,8 +24,9 @@ class NotificationManager(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
     companion object {
-        private const val SUBSCRIPTION_NOTIFICATION_ID_BASE = 1000
-        private const val WARRANTY_NOTIFICATION_ID_BASE = 2000
+        private const val SUBSCRIPTION_NOTIFICATION_ID_BASE = 100000
+        private const val WARRANTY_30_DAYS_NOTIFICATION_ID_BASE = 200000
+        private const val WARRANTY_7_DAYS_NOTIFICATION_ID_BASE = 300000
     }
 
     /**
@@ -171,7 +172,7 @@ class NotificationManager(private val context: Context) {
                 CurrencyUtils.formatPrice(context, item.price)
             )
         } else {
-            "Se renovará mañana"
+            context.getString(R.string.notification_subscription_text_no_price)
         }
 
         return NotificationCompat.Builder(context, NotificationChannels.SUBSCRIPTIONS_CHANNEL_ID)
@@ -230,12 +231,13 @@ class NotificationManager(private val context: Context) {
 
     /**
      * Generar ID único para notificación
+     * Cada tipo tiene su propio rango de 100000 IDs para evitar colisiones
      */
     private fun getNotificationId(item: Item, type: NotificationType): Int {
         return when (type) {
             NotificationType.SUBSCRIPTION -> SUBSCRIPTION_NOTIFICATION_ID_BASE + item.id.toInt()
-            NotificationType.WARRANTY_30_DAYS -> WARRANTY_NOTIFICATION_ID_BASE + item.id.toInt()
-            NotificationType.WARRANTY_7_DAYS -> WARRANTY_NOTIFICATION_ID_BASE + item.id.toInt() + 10000
+            NotificationType.WARRANTY_30_DAYS -> WARRANTY_30_DAYS_NOTIFICATION_ID_BASE + item.id.toInt()
+            NotificationType.WARRANTY_7_DAYS -> WARRANTY_7_DAYS_NOTIFICATION_ID_BASE + item.id.toInt()
         }
     }
 

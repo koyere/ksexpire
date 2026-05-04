@@ -12,11 +12,17 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.io.*
+import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
+import javax.crypto.Cipher
+import javax.crypto.SecretKeyFactory
+import javax.crypto.spec.IvParameterSpec
+import javax.crypto.spec.PBEKeySpec
+import javax.crypto.spec.SecretKeySpec
 
 /**
  * Manager para backup y restauración de datos
@@ -35,47 +41,63 @@ class BackupManager(private val context: Context) {
         private const val METADATA_FILE = "backup_metadata.json"
         private const val ITEMS_FILE = "items.json"
         private const val IMAGES_DIR = "images/"
+        
+        // Encryption constants
+        private const val ENCRYPTION_ALGORITHM = "AES/CBC/PKCS5Padding"
+        private const val KEY_DERIVATION_ALGORITHM = "PBKDF2WithHmacSHA256"
+        private const val KEY_LENGTH = 256
+        private const val ITERATION_COUNT = 65536
+        private const val IV_LENGTH = 16
+        private const val SALT_LENGTH = 16
+        private const val ENCRYPTED_HEADER = "KSEXPIRE_ENC_V1"
     }
 
     /**
      * Crear backup completo con base de datos e imágenes
+     * @param password Si se proporciona, el backup se cifra con AES-256
      */
-    suspend fun createBackup(items: List<Item>, outputUri: Uri): Result<BackupResult> {
+    suspend fun createBackup(items: List<Item>, outputUri: Uri, password: String? = null): Result<BackupResult> {
         return withContext(Dispatchers.IO) {
             try {
                 val contentResolver = context.contentResolver
                 val outputStream = contentResolver.openOutputStream(outputUri)
                     ?: return@withContext Result.failure(Exception("No se pudo abrir el archivo de destino"))
 
-                ZipOutputStream(BufferedOutputStream(outputStream)).use { zipOut ->
-                    // Crear metadata del backup
+                // Crear el ZIP en memoria primero si se va a cifrar
+                val zipBytes = ByteArrayOutputStream()
+                ZipOutputStream(BufferedOutputStream(zipBytes)).use { zipOut ->
                     val metadata = BackupMetadata(
                         version = BACKUP_VERSION,
                         createdAt = System.currentTimeMillis(),
                         appVersion = getAppVersion(),
                         itemsCount = items.size,
-                        imagesCount = items.count { !it.imagePath.isNullOrBlank() }
+                        imagesCount = items.count { !it.imagePath.isNullOrBlank() },
+                        encrypted = password != null
                     )
 
-                    // Agregar metadata al ZIP
                     addMetadataToZip(zipOut, metadata)
-
-                    // Agregar datos de ítems al ZIP
                     addItemsToZip(zipOut, items)
-
-                    // Agregar imágenes al ZIP
                     val imagesAdded = addImagesToZip(zipOut, items)
-
-                    val result = BackupResult(
-                        success = true,
-                        itemsBackedUp = items.size,
-                        imagesBackedUp = imagesAdded,
-                        backupSize = getFileSize(outputUri),
-                        message = "Backup creado exitosamente"
-                    )
-
-                    Result.success(result)
                 }
+
+                // Escribir al archivo de salida (cifrado o plano)
+                val rawZipData = zipBytes.toByteArray()
+                if (password != null) {
+                    val encryptedData = encryptData(rawZipData, password)
+                    outputStream.use { it.write(encryptedData) }
+                } else {
+                    outputStream.use { it.write(rawZipData) }
+                }
+
+                val result = BackupResult(
+                    success = true,
+                    itemsBackedUp = items.size,
+                    imagesBackedUp = items.count { !it.imagePath.isNullOrBlank() },
+                    backupSize = getFileSize(outputUri),
+                    message = "Backup creado exitosamente"
+                )
+
+                Result.success(result)
             } catch (e: Exception) {
                 Result.failure(e)
             }
@@ -84,19 +106,30 @@ class BackupManager(private val context: Context) {
 
     /**
      * Restaurar backup desde archivo ZIP
+     * @param password Contraseña para descifrar (null si el backup no está cifrado)
      */
-    suspend fun restoreBackup(inputUri: Uri): Result<RestoreResult> {
+    suspend fun restoreBackup(inputUri: Uri, password: String? = null): Result<RestoreResult> {
         return withContext(Dispatchers.IO) {
             try {
                 val contentResolver = context.contentResolver
-                val inputStream = contentResolver.openInputStream(inputUri)
+                val rawBytes = contentResolver.openInputStream(inputUri)?.use { it.readBytes() }
                     ?: return@withContext Result.failure(Exception("No se pudo abrir el archivo de backup"))
+
+                // Detectar si el archivo está cifrado
+                val zipData = if (isEncryptedBackup(rawBytes)) {
+                    if (password == null) {
+                        return@withContext Result.failure(Exception("Este backup está cifrado. Se requiere contraseña."))
+                    }
+                    decryptData(rawBytes, password)
+                } else {
+                    rawBytes
+                }
 
                 var metadata: BackupMetadata? = null
                 var items: List<Item> = emptyList()
                 val restoredImages = mutableListOf<String>()
 
-                ZipInputStream(BufferedInputStream(inputStream)).use { zipIn ->
+                ZipInputStream(BufferedInputStream(ByteArrayInputStream(zipData))).use { zipIn ->
                     var entry: ZipEntry? = zipIn.nextEntry
 
                     while (entry != null) {
@@ -278,21 +311,36 @@ class BackupManager(private val context: Context) {
     }
 
     /**
-     * Validar archivo de backup
+     * Validar archivo de backup (detecta si está cifrado)
      */
     suspend fun validateBackupFile(inputUri: Uri): Result<BackupValidation> {
         return withContext(Dispatchers.IO) {
             try {
-                val contentResolver = context.contentResolver
-                val inputStream = contentResolver.openInputStream(inputUri)
+                val rawBytes = context.contentResolver.openInputStream(inputUri)?.use { it.readBytes() }
                     ?: return@withContext Result.failure(Exception("No se pudo abrir el archivo"))
+
+                val isEncrypted = isEncryptedBackup(rawBytes)
+
+                // Si está cifrado, no podemos validar el contenido sin contraseña
+                if (isEncrypted) {
+                    val validation = BackupValidation(
+                        isValid = true,
+                        hasMetadata = true,
+                        hasItems = true,
+                        itemsCount = -1, // Desconocido sin contraseña
+                        imagesCount = -1,
+                        fileSize = getFileSize(inputUri),
+                        isEncrypted = true
+                    )
+                    return@withContext Result.success(validation)
+                }
 
                 var hasMetadata = false
                 var hasItems = false
                 var itemsCount = 0
                 var imagesCount = 0
 
-                ZipInputStream(BufferedInputStream(inputStream)).use { zipIn ->
+                ZipInputStream(BufferedInputStream(ByteArrayInputStream(rawBytes))).use { zipIn ->
                     var entry: ZipEntry? = zipIn.nextEntry
 
                     while (entry != null) {
@@ -300,7 +348,6 @@ class BackupManager(private val context: Context) {
                             entry.name == METADATA_FILE -> hasMetadata = true
                             entry.name == ITEMS_FILE -> {
                                 hasItems = true
-                                // Contar ítems sin cargar todo en memoria
                                 val itemsJson = zipIn.readBytes().toString(Charsets.UTF_8)
                                 val items = json.decodeFromString<List<Item>>(itemsJson)
                                 itemsCount = items.size
@@ -320,13 +367,87 @@ class BackupManager(private val context: Context) {
                     hasItems = hasItems,
                     itemsCount = itemsCount,
                     imagesCount = imagesCount,
-                    fileSize = getFileSize(inputUri)
+                    fileSize = getFileSize(inputUri),
+                    isEncrypted = false
                 )
 
                 Result.success(validation)
 
             } catch (e: Exception) {
                 Result.failure(e)
+            }
+        }
+    }
+
+    /**
+     * Cifrar datos con AES-256-CBC usando contraseña
+     */
+    private fun encryptData(data: ByteArray, password: String): ByteArray {
+        val salt = ByteArray(SALT_LENGTH).also { SecureRandom().nextBytes(it) }
+        val iv = ByteArray(IV_LENGTH).also { SecureRandom().nextBytes(it) }
+        
+        val keySpec = PBEKeySpec(password.toCharArray(), salt, ITERATION_COUNT, KEY_LENGTH)
+        val secretKey = SecretKeyFactory.getInstance(KEY_DERIVATION_ALGORITHM)
+            .generateSecret(keySpec)
+        val aesKey = SecretKeySpec(secretKey.encoded, "AES")
+        
+        val cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM)
+        cipher.init(Cipher.ENCRYPT_MODE, aesKey, IvParameterSpec(iv))
+        val encryptedBytes = cipher.doFinal(data)
+        
+        // Formato: HEADER + salt + iv + encrypted data
+        val output = ByteArrayOutputStream()
+        output.write(ENCRYPTED_HEADER.toByteArray(Charsets.UTF_8))
+        output.write(salt)
+        output.write(iv)
+        output.write(encryptedBytes)
+        return output.toByteArray()
+    }
+
+    /**
+     * Descifrar datos con AES-256-CBC usando contraseña
+     */
+    private fun decryptData(data: ByteArray, password: String): ByteArray {
+        val headerSize = ENCRYPTED_HEADER.toByteArray(Charsets.UTF_8).size
+        val offset = headerSize
+        
+        val salt = data.copyOfRange(offset, offset + SALT_LENGTH)
+        val iv = data.copyOfRange(offset + SALT_LENGTH, offset + SALT_LENGTH + IV_LENGTH)
+        val encryptedBytes = data.copyOfRange(offset + SALT_LENGTH + IV_LENGTH, data.size)
+        
+        val keySpec = PBEKeySpec(password.toCharArray(), salt, ITERATION_COUNT, KEY_LENGTH)
+        val secretKey = SecretKeyFactory.getInstance(KEY_DERIVATION_ALGORITHM)
+            .generateSecret(keySpec)
+        val aesKey = SecretKeySpec(secretKey.encoded, "AES")
+        
+        val cipher = Cipher.getInstance(ENCRYPTION_ALGORITHM)
+        cipher.init(Cipher.DECRYPT_MODE, aesKey, IvParameterSpec(iv))
+        return cipher.doFinal(encryptedBytes)
+    }
+
+    /**
+     * Verificar si un archivo de backup está cifrado
+     */
+    fun isEncryptedBackup(data: ByteArray): Boolean {
+        val headerBytes = ENCRYPTED_HEADER.toByteArray(Charsets.UTF_8)
+        if (data.size < headerBytes.size) return false
+        return data.copyOfRange(0, headerBytes.size).contentEquals(headerBytes)
+    }
+
+    /**
+     * Verificar si un archivo de backup (por URI) está cifrado
+     */
+    suspend fun isEncryptedBackup(uri: Uri): Boolean {
+        return withContext(Dispatchers.IO) {
+            try {
+                val headerBytes = ENCRYPTED_HEADER.toByteArray(Charsets.UTF_8)
+                val buffer = ByteArray(headerBytes.size)
+                context.contentResolver.openInputStream(uri)?.use { stream ->
+                    val bytesRead = stream.read(buffer)
+                    bytesRead == headerBytes.size && buffer.contentEquals(headerBytes)
+                } ?: false
+            } catch (e: Exception) {
+                false
             }
         }
     }
@@ -340,7 +461,8 @@ class BackupManager(private val context: Context) {
         val createdAt: Long,
         val appVersion: String,
         val itemsCount: Int,
-        val imagesCount: Int
+        val imagesCount: Int,
+        val encrypted: Boolean = false
     )
 
     /**
@@ -375,6 +497,7 @@ class BackupManager(private val context: Context) {
         val hasItems: Boolean,
         val itemsCount: Int,
         val imagesCount: Int,
-        val fileSize: Long
+        val fileSize: Long,
+        val isEncrypted: Boolean = false
     )
 }

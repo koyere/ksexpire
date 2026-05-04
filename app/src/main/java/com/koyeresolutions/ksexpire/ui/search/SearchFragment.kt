@@ -8,7 +8,9 @@ import android.view.ViewGroup
 import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.chip.Chip
 import com.koyeresolutions.ksexpire.R
@@ -55,11 +57,15 @@ class SearchFragment : Fragment() {
     
     /**
      * Procesar argumentos de navegación para aplicar filtros
+     * Usa flag en ViewModel para evitar re-aplicación en rotación
      */
     private fun processNavigationArguments() {
+        if (viewModel.hasProcessedNavigationArgs) return
+        
         val filterType = arguments?.getString("filter_type")
         
         if (!filterType.isNullOrBlank()) {
+            viewModel.hasProcessedNavigationArgs = true
             when (filterType) {
                 "subscriptions" -> {
                     viewModel.setFilter(SearchViewModel.SearchFilter.SUBSCRIPTIONS)
@@ -70,8 +76,6 @@ class SearchFragment : Fragment() {
                     viewModel.search("")
                 }
             }
-            // Limpiar argumentos para evitar re-aplicar en rotación
-            arguments?.remove("filter_type")
         }
     }
 
@@ -126,24 +130,24 @@ class SearchFragment : Fragment() {
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
 
-        // Observar query actual
-        lifecycleScope.launch {
-            viewModel.currentQuery.collect { query ->
-                updateSearchInfo(query)
-            }
-        }
-
-        // Observar filtros
-        lifecycleScope.launch {
-            viewModel.currentFilter.collect { filter ->
-                updateFilterChips(filter)
-            }
-        }
-
-        // Observar estadísticas
-        lifecycleScope.launch {
-            viewModel.searchStats.collect { stats ->
-                updateSearchStats(stats)
+        // Observar query actual (lifecycle-aware)
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.currentQuery.collect { query ->
+                        updateSearchInfo(query)
+                    }
+                }
+                launch {
+                    viewModel.currentFilter.collect { filter ->
+                        updateFilterChips(filter)
+                    }
+                }
+                launch {
+                    viewModel.searchStats.collect { stats ->
+                        updateSearchStats(stats)
+                    }
+                }
             }
         }
     }
@@ -276,9 +280,9 @@ class SearchFragment : Fragment() {
      * Actualizar estadísticas de búsqueda
      */
     private fun updateSearchStats(stats: SearchViewModel.SearchStats) {
-        binding.textTotalItems.text = "Total: ${stats.totalItems} ítems"
-        binding.textSubscriptionsCount.text = "Suscripciones: ${stats.subscriptionsCount}"
-        binding.textWarrantiesCount.text = "Garantías: ${stats.warrantiesCount}"
+        binding.textTotalItems.text = getString(R.string.search_total_items, stats.totalItems)
+        binding.textSubscriptionsCount.text = getString(R.string.search_subscriptions_count, stats.subscriptionsCount)
+        binding.textWarrantiesCount.text = getString(R.string.search_warranties_count, stats.warrantiesCount)
     }
 
     /**

@@ -36,7 +36,7 @@ class BackupActivity : AppCompatActivity() {
     private val selectBackupLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
-        uri?.let { viewModel.validateAndRestoreBackup(it) }
+        uri?.let { showRestoreConfirmation(it) }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -147,6 +147,22 @@ class BackupActivity : AppCompatActivity() {
      */
     private fun selectBackupFile() {
         selectBackupLauncher.launch(Constants.BACKUP_MIME_TYPE)
+    }
+
+    /**
+     * Mostrar confirmación antes de restaurar
+     * Advierte al usuario que los datos actuales serán reemplazados
+     */
+    private fun showRestoreConfirmation(uri: Uri) {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.restore_confirm_title)
+            .setMessage(R.string.restore_confirm_message)
+            .setPositiveButton(R.string.restore_confirm_proceed) { _, _ ->
+                viewModel.validateAndRestoreBackup(uri)
+            }
+            .setNegativeButton(R.string.dialog_cancel, null)
+            .setIcon(R.drawable.ic_warning)
+            .show()
     }
 
     /**

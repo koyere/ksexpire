@@ -30,6 +30,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val _searchFilter = MutableStateFlow(SearchFilter.ALL)
     val currentFilter: StateFlow<SearchFilter> = _searchFilter.asStateFlow()
 
+    // Flag para evitar re-aplicar argumentos de navegación en rotación
+    var hasProcessedNavigationArgs = false
+
     // Resultados de búsqueda
     private val _searchResults = MutableLiveData<List<Item>>()
     val searchResults: LiveData<List<Item>> = _searchResults

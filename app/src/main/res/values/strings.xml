@@ -72,6 +72,7 @@
     <string name="notification_channel_warranties">Recordatorios de Garantías</string>
     <string name="notification_subscription_title">Próximo cobro: %1$s</string>
     <string name="notification_subscription_text">Se cobrará %1$s mañana</string>
+    <string name="notification_subscription_text_no_price">Se renovará mañana</string>
     <string name="notification_warranty_title">Garantía por vencer: %1$s</string>
     <string name="notification_warranty_text">Vence en %1$d días</string>
     
@@ -84,6 +85,9 @@
     <string name="backup_restore_success">Datos restaurados exitosamente</string>
     <string name="backup_error">Error al crear la copia de seguridad</string>
     <string name="backup_restore_error">Error al restaurar los datos</string>
+    <string name="restore_confirm_title">¿Restaurar datos?</string>
+    <string name="restore_confirm_message">Esta acción reemplazará todos los datos actuales de la aplicación (suscripciones, garantías e imágenes) con los del archivo de backup seleccionado.\n\nEsta acción no se puede deshacer.</string>
+    <string name="restore_confirm_proceed">Restaurar</string>
     
     <!-- Sobre el desarrollador -->
     <string name="about_title">Sobre el Desarrollador</string>
@@ -113,6 +117,29 @@
     <string name="error_invalid_price">Precio inválido</string>
     <string name="error_expiry_before_purchase">La fecha de vencimiento debe ser posterior a la de compra</string>
     <string name="error_generic">Ha ocurrido un error</string>
+    <string name="error_loading_data">Error al cargar datos: %1$s</string>
+    <string name="error_saving_item">Error al guardar: %1$s</string>
+    <string name="error_deleting_item">Error al eliminar ítem: %1$s</string>
+    <string name="error_updating_item">Error al actualizar ítem: %1$s</string>
+    <string name="error_navigate_search">Error al navegar a búsqueda</string>
+    <string name="error_item_not_found">Ítem no encontrado</string>
+    <string name="error_loading_item">Error al cargar ítem: %1$s</string>
+    <string name="error_unknown">Error desconocido</string>
+    
+    <!-- Mantenimiento -->
+    <string name="maintenance_success">Mantenimiento completado exitosamente</string>
+    <string name="maintenance_error">Error durante el mantenimiento: %1$s</string>
+    
+    <!-- Búsqueda estadísticas -->
+    <string name="search_total_items">Total: %1$d ítems</string>
+    <string name="search_subscriptions_count">Suscripciones: %1$d</string>
+    <string name="search_warranties_count">Garantías: %1$d</string>
+    
+    <!-- Diálogos -->
+    <string name="dialog_delete_title">Eliminar ítem</string>
+    <string name="dialog_delete_message">¿Estás seguro de eliminar \"%1$s\"?</string>
+    <string name="dialog_cancel">Cancelar</string>
+    <string name="action_retry">Reintentar</string>
     
     <!-- Monedas -->
     <string name="currency_usd">$ USD</string>

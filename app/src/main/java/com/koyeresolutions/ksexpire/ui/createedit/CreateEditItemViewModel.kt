@@ -108,35 +108,35 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
     }
 
     /**
-     * Actualizar nombre
+     * Actualizar nombre con validación en tiempo real
      */
     fun updateName(name: String) {
         _uiState.value = _uiState.value.copy(name = name)
-        clearValidationErrors()
+        validateField()
     }
 
     /**
-     * Actualizar precio
+     * Actualizar precio con validación en tiempo real
      */
     fun updatePrice(price: String) {
         _uiState.value = _uiState.value.copy(price = price)
-        clearValidationErrors()
+        validateField()
     }
 
     /**
-     * Actualizar fecha de compra
+     * Actualizar fecha de compra con validación en tiempo real
      */
     fun updatePurchaseDate(timestamp: Long) {
         _uiState.value = _uiState.value.copy(purchaseDate = timestamp)
-        clearValidationErrors()
+        validateField()
     }
 
     /**
-     * Actualizar fecha de vencimiento
+     * Actualizar fecha de vencimiento con validación en tiempo real
      */
     fun updateExpiryDate(timestamp: Long) {
         _uiState.value = _uiState.value.copy(expiryDate = timestamp)
-        clearValidationErrors()
+        validateField()
     }
 
     /**
@@ -278,6 +278,14 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
      */
     private fun clearValidationErrors() {
         _validationErrors.value = emptyList()
+    }
+
+    /**
+     * Validar campos en tiempo real (muestra errores sin bloquear)
+     */
+    private fun validateField() {
+        val errors = validateForm()
+        _validationErrors.value = errors
     }
 
     /**

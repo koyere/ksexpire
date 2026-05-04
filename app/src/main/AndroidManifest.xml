@@ -28,7 +28,8 @@
         android:theme="@style/Theme.KSExpire"
         android:requestLegacyExternalStorage="false"
         android:preserveLegacyExternalStorage="false"
-        tools:targetApi="31">
+        android:enableOnBackInvokedCallback="true"
+        tools:targetApi="35">
 
         <!-- Actividad principal -->
         <activity

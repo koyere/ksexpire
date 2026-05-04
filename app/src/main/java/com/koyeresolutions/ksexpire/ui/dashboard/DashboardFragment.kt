@@ -16,6 +16,7 @@ import androidx.navigation.fragment.findNavController
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Observer
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,7 +29,6 @@ import com.koyeresolutions.ksexpire.ui.createedit.CreateEditItemActivity
 import com.koyeresolutions.ksexpire.ui.dashboard.adapters.SubscriptionAdapter
 import com.koyeresolutions.ksexpire.ui.dashboard.adapters.WarrantyAdapter
 import com.koyeresolutions.ksexpire.ui.settings.NotificationSettingsActivity
-import kotlinx.coroutines.launch
 
 /**
  * Fragment principal del Dashboard
@@ -173,26 +173,26 @@ class DashboardFragment : Fragment() {
             }
         })
 
-        // Observar suscripciones (Flow)
+        // Observar suscripciones, garantías y estado del UI con lifecycle awareness
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.subscriptions.collect { subscriptions ->
-                subscriptionAdapter.submitList(subscriptions)
-                updateSubscriptionsVisibility(subscriptions.isEmpty())
-            }
-        }
-
-        // Observar garantías (Flow)
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.warranties.collect { warranties ->
-                warrantyAdapter.submitList(warranties)
-                updateWarrantiesVisibility(warranties.isEmpty())
-            }
-        }
-
-        // Observar estado del UI
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.uiState.collect { state ->
-                updateEmptyState(state.isEmpty)
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.subscriptions.collect { subscriptions ->
+                        subscriptionAdapter.submitList(subscriptions)
+                        updateSubscriptionsVisibility(subscriptions.isEmpty())
+                    }
+                }
+                launch {
+                    viewModel.warranties.collect { warranties ->
+                        warrantyAdapter.submitList(warranties)
+                        updateWarrantiesVisibility(warranties.isEmpty())
+                    }
+                }
+                launch {
+                    viewModel.uiState.collect { state ->
+                        updateEmptyState(state.isEmpty)
+                    }
+                }
             }
         }
     }
@@ -311,12 +311,12 @@ class DashboardFragment : Fragment() {
      */
     private fun showDeleteConfirmation(item: com.koyeresolutions.ksexpire.data.entities.Item) {
         MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Eliminar ítem")
-            .setMessage("¿Estás seguro de eliminar \"${item.name}\"?")
-            .setPositiveButton("Eliminar") { _, _ ->
+            .setTitle(R.string.dialog_delete_title)
+            .setMessage(getString(R.string.dialog_delete_message, item.name))
+            .setPositiveButton(R.string.action_delete) { _, _ ->
                 viewModel.deleteItem(item)
             }
-            .setNegativeButton("Cancelar", null)
+            .setNegativeButton(R.string.dialog_cancel, null)
             .show()
     }
 
@@ -325,7 +325,7 @@ class DashboardFragment : Fragment() {
      */
     private fun showError(message: String) {
         Snackbar.make(binding.root, message, Snackbar.LENGTH_LONG)
-            .setAction("Reintentar") {
+            .setAction(R.string.action_retry) {
                 viewModel.refreshData()
             }
             .show()
@@ -346,7 +346,7 @@ class DashboardFragment : Fragment() {
             )
         } catch (e: Exception) {
             // Log error y mostrar mensaje al usuario
-            showError("Error al navegar a búsqueda")
+            showError(getString(R.string.error_navigate_search))
         }
     }
 

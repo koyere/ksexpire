@@ -18,6 +18,10 @@ import com.google.android.material.snackbar.Snackbar
 import com.koyeresolutions.ksexpire.R
 import com.koyeresolutions.ksexpire.databinding.ActivityCameraBinding
 import com.koyeresolutions.ksexpire.utils.FileUtils
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
@@ -190,6 +194,7 @@ class CameraActivity : AppCompatActivity() {
     }
     /**
      * Procesar y guardar imagen capturada
+     * Se ejecuta en Dispatchers.Default para evitar ANR con bitmaps grandes
      */
     private fun processAndSaveImage(tempImagePath: String?) {
         if (tempImagePath == null) {
@@ -198,47 +203,66 @@ class CameraActivity : AppCompatActivity() {
             return
         }
 
-        try {
-            // Cargar imagen temporal
-            val bitmap = BitmapFactory.decodeFile(tempImagePath)
-            if (bitmap == null) {
-                showError("Error al cargar la imagen")
-                resetCaptureButton()
-                return
-            }
-
-            // Corregir orientación si es necesario
-            val correctedBitmap = FileUtils.correctImageOrientation(bitmap, tempImagePath)
-
-            // Redimensionar para optimizar almacenamiento
-            val resizedBitmap = FileUtils.resizeBitmap(
-                correctedBitmap,
-                com.koyeresolutions.ksexpire.utils.Constants.MAX_IMAGE_WIDTH,
-                com.koyeresolutions.ksexpire.utils.Constants.MAX_IMAGE_HEIGHT
-            )
-
-            // Guardar imagen comprimida
-            val savedImagePath = FileUtils.saveCompressedImage(resizedBitmap, this)
-
-            if (savedImagePath != null) {
-                // Limpiar archivo temporal
-                java.io.File(tempImagePath).delete()
-
-                // Retornar resultado
-                val resultIntent = Intent().apply {
-                    putExtra("image_path", savedImagePath)
+        CoroutineScope(Dispatchers.Default).launch {
+            try {
+                // Cargar imagen temporal (operación pesada, fuera del main thread)
+                val bitmap = BitmapFactory.decodeFile(tempImagePath)
+                if (bitmap == null) {
+                    withContext(Dispatchers.Main) {
+                        showError("Error al cargar la imagen")
+                        resetCaptureButton()
+                    }
+                    return@launch
                 }
-                setResult(RESULT_OK, resultIntent)
-                finish()
-            } else {
-                showError("Error al guardar la imagen")
-                resetCaptureButton()
-            }
 
-        } catch (e: Exception) {
-            Log.e(TAG, "Error al procesar imagen", e)
-            showError("Error al procesar la imagen")
-            resetCaptureButton()
+                // Corregir orientación si es necesario
+                val correctedBitmap = FileUtils.correctImageOrientation(bitmap, tempImagePath)
+
+                // Redimensionar para optimizar almacenamiento
+                val resizedBitmap = FileUtils.resizeBitmap(
+                    correctedBitmap,
+                    com.koyeresolutions.ksexpire.utils.Constants.MAX_IMAGE_WIDTH,
+                    com.koyeresolutions.ksexpire.utils.Constants.MAX_IMAGE_HEIGHT
+                )
+
+                // Guardar imagen comprimida
+                val savedImagePath = FileUtils.saveCompressedImage(resizedBitmap, this@CameraActivity)
+
+                // Liberar bitmaps intermedios
+                if (correctedBitmap !== bitmap) bitmap.recycle()
+                if (resizedBitmap !== correctedBitmap) correctedBitmap.recycle()
+                resizedBitmap.recycle()
+
+                if (savedImagePath != null) {
+                    // Limpiar archivo temporal
+                    java.io.File(tempImagePath).delete()
+
+                    // Retornar resultado en main thread
+                    withContext(Dispatchers.Main) {
+                        val resultIntent = Intent().apply {
+                            putExtra("image_path", savedImagePath)
+                        }
+                        setResult(RESULT_OK, resultIntent)
+                        finish()
+                    }
+                } else {
+                    // Limpiar archivo temporal en caso de error
+                    java.io.File(tempImagePath).delete()
+                    withContext(Dispatchers.Main) {
+                        showError("Error al guardar la imagen")
+                        resetCaptureButton()
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error al procesar imagen", e)
+                // Limpiar archivo temporal en caso de error
+                java.io.File(tempImagePath).delete()
+                withContext(Dispatchers.Main) {
+                    showError("Error al procesar la imagen")
+                    resetCaptureButton()
+                }
+            }
         }
     }
 

@@ -42,12 +42,6 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         loadDashboardData()
-        // Observar cambios en suscripciones para recalcular gasto mensual
-        viewModelScope.launch {
-            subscriptions.collect {
-                loadDashboardData()
-            }
-        }
     }
 
     /**
@@ -63,10 +57,19 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 val monthlyExpense = repository.calculateMonthlyExpense()
                 _monthlyExpense.value = monthlyExpense
 
+                // Verificar si hay datos para determinar estado vacío
+                val stats = repository.getDashboardStats()
+                val subscriptionsCount = stats.subscriptionsCount.value ?: 0
+                val warrantiesCount = stats.warrantiesCount.value ?: 0
+                val isEmpty = subscriptionsCount == 0 && warrantiesCount == 0
+
                 // Actualizar estado del UI
                 _uiState.value = _uiState.value.copy(
                     monthlyExpense = monthlyExpense,
+                    subscriptionsCount = subscriptionsCount,
+                    warrantiesCount = warrantiesCount,
                     isLoading = false,
+                    isEmpty = isEmpty,
                     error = null
                 )
 

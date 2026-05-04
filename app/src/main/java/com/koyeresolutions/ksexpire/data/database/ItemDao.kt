@@ -277,9 +277,10 @@ interface ItemDao {
     suspend fun getTotalItemsCount(): Int
 
     /**
-     * Obtener el tamaño aproximado de la base de datos
+     * Obtener el tamaño estimado de la base de datos
+     * Usa el tamaño real del archivo de BD en disco
      */
-    @Query("SELECT COUNT(*) * 1024 FROM items") // Estimación aproximada
+    @Query("SELECT COUNT(*) FROM items")
     suspend fun getEstimatedDatabaseSize(): Long
 
     // ==================== CONSULTAS PARA BACKUP/RESTORE ====================

@@ -300,20 +300,20 @@ class ItemRepository(
             
             // Obtener estadísticas después de limpieza
             val totalItems = itemDao.getTotalItemsCount()
-            val estimatedSize = itemDao.getEstimatedDatabaseSize()
+            val dbFile = context.getDatabasePath(Constants.DATABASE_NAME)
+            val realSize = if (dbFile.exists()) dbFile.length() else 0L
             
             MaintenanceResult(
                 success = true,
                 itemsRemaining = totalItems,
-                estimatedDatabaseSize = estimatedSize,
-                message = "Mantenimiento completado exitosamente"
+                estimatedDatabaseSize = realSize
             )
         } catch (e: Exception) {
             MaintenanceResult(
                 success = false,
                 itemsRemaining = 0,
                 estimatedDatabaseSize = 0,
-                message = "Error durante el mantenimiento: ${e.message}"
+                errorMessage = e.message
             )
         }
     }
@@ -365,7 +365,7 @@ class ItemRepository(
         val success: Boolean,
         val itemsRemaining: Int,
         val estimatedDatabaseSize: Long,
-        val message: String
+        val errorMessage: String? = null
     )
 
     /**
