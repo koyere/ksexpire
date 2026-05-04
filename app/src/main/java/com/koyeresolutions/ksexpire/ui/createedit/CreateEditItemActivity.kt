@@ -9,6 +9,8 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ArrayAdapter
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
@@ -35,10 +37,19 @@ class CreateEditItemActivity : AppCompatActivity() {
     private val aboutViewModel: AboutViewModel by viewModels()
 
     private var isEditMode = false
-    private var isUpdatingUI = false // Evitar loops de actualización
+    private var isUpdatingUI = false
 
-    companion object {
-        private const val REQUEST_CAMERA = 1001
+    // Launcher moderno para cámara (reemplaza startActivityForResult)
+    private val cameraLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val imagePath = result.data?.getStringExtra("image_path")
+            if (imagePath != null) {
+                viewModel.updateImagePath(imagePath)
+                showSuccess("Foto guardada correctamente")
+            }
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,6 +61,7 @@ class CreateEditItemActivity : AppCompatActivity() {
         setupToolbar()
         setupUI()
         setupObservers()
+        setupBackNavigation()
         initializeViewModel()
     }
 
@@ -67,6 +79,7 @@ class CreateEditItemActivity : AppCompatActivity() {
      */
     private fun setupUI() {
         setupTypeSelector()
+        setupCategorySelector()
         setupFrequencySpinner()
         setupDatePickers()
         setupQuickDurationChips()
@@ -88,6 +101,81 @@ class CreateEditItemActivity : AppCompatActivity() {
                 viewModel.updateItemType(selectedType)
             }
         }
+    }
+
+    /**
+     * Configurar selector de categoría con chips dinámicos
+     */
+    private fun setupCategorySelector() {
+        val chipGroup = binding.chipGroupCategory
+        chipGroup.removeAllViews()
+        
+        // Agregar chip "Sin categoría"
+        val noneChip = com.google.android.material.chip.Chip(this).apply {
+            text = "Ninguna"
+            isCheckable = true
+            isChecked = true
+            setOnClickListener {
+                viewModel.updateCategory(null, null)
+            }
+        }
+        chipGroup.addView(noneChip)
+        
+        // Agregar chips de categorías predefinidas
+        Constants.PREDEFINED_CATEGORIES.forEach { category ->
+            val chip = com.google.android.material.chip.Chip(this).apply {
+                text = "${category.emoji} ${category.name}"
+                isCheckable = true
+                tag = category
+                setOnClickListener {
+                    viewModel.updateCategory(category.name, category.color)
+                }
+            }
+            chipGroup.addView(chip)
+        }
+        
+        // Agregar chip "Otra"
+        val otherChip = com.google.android.material.chip.Chip(this).apply {
+            text = getString(R.string.form_category_other)
+            isCheckable = true
+            setOnClickListener {
+                showCustomCategoryDialog()
+            }
+        }
+        chipGroup.addView(otherChip)
+    }
+
+    /**
+     * Mostrar diálogo para categoría personalizada
+     */
+    private fun showCustomCategoryDialog() {
+        val input = com.google.android.material.textfield.TextInputEditText(this)
+        input.hint = "Nombre de la categoría"
+        input.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        
+        val container = android.widget.FrameLayout(this)
+        val params = android.widget.FrameLayout.LayoutParams(
+            android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+            android.widget.FrameLayout.LayoutParams.WRAP_CONTENT
+        )
+        params.setMargins(48, 16, 48, 0)
+        input.layoutParams = params
+        container.addView(input)
+        
+        MaterialAlertDialogBuilder(this)
+            .setTitle("Categoría personalizada")
+            .setView(container)
+            .setPositiveButton("Aceptar") { _, _ ->
+                val name = input.text?.toString()?.trim()
+                if (!name.isNullOrBlank()) {
+                    viewModel.updateCategory(name, "#607D8B") // Color gris por defecto
+                }
+            }
+            .setNegativeButton("Cancelar") { _, _ ->
+                // Deseleccionar el chip "Otra"
+                binding.chipGroupCategory.clearCheck()
+            }
+            .show()
     }
 
     /**
@@ -222,7 +310,7 @@ class CreateEditItemActivity : AppCompatActivity() {
      * Configurar listeners de clicks
      */
     private fun setupClickListeners() {
-        // Campos de texto con TextWatcher para actualizar en tiempo real
+        // Campos de texto con TextWatcher
         binding.editTextName.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -245,7 +333,30 @@ class CreateEditItemActivity : AppCompatActivity() {
         
         // Switch de estado activo
         binding.switchActive.setOnCheckedChangeListener { _, _ ->
-            viewModel.toggleActiveStatus()
+            if (!isUpdatingUI) viewModel.toggleActiveStatus()
+        }
+        
+        // Switch de prueba gratuita
+        binding.switchFreeTrial.setOnCheckedChangeListener { _, isChecked ->
+            if (!isUpdatingUI) {
+                binding.layoutFreeTrialDate.visibility = if (isChecked) View.VISIBLE else View.GONE
+                if (!isChecked) {
+                    viewModel.updateFreeTrial(false, null)
+                } else {
+                    // Fecha por defecto: 7 días desde hoy
+                    val defaultEnd = System.currentTimeMillis() + (7 * 24 * 60 * 60 * 1000L)
+                    viewModel.updateFreeTrial(true, defaultEnd)
+                    binding.buttonFreeTrialDate.text = DateUtils.formatDate(defaultEnd)
+                }
+            }
+        }
+        
+        // Botón fecha de prueba gratuita
+        binding.buttonFreeTrialDate.setOnClickListener {
+            showDatePicker { timestamp ->
+                viewModel.updateFreeTrial(true, timestamp)
+                binding.buttonFreeTrialDate.text = DateUtils.formatDate(timestamp)
+            }
         }
         
         // Botón Guardar
@@ -337,14 +448,14 @@ class CreateEditItemActivity : AppCompatActivity() {
                 binding.chipSubscription.isChecked = true
                 binding.layoutFrequency.visibility = View.VISIBLE
                 binding.layoutQuickDuration.visibility = View.GONE
-                // Textos contextuales para suscripciones
+                binding.layoutFreeTrial.visibility = View.VISIBLE
                 updateFormLabelsForSubscription()
             }
             Constants.ITEM_TYPE_WARRANTY -> {
                 binding.chipWarranty.isChecked = true
                 binding.layoutFrequency.visibility = View.GONE
                 binding.layoutQuickDuration.visibility = View.VISIBLE
-                // Textos contextuales para garantías
+                binding.layoutFreeTrial.visibility = View.GONE
                 updateFormLabelsForWarranty()
             }
         }
@@ -376,6 +487,16 @@ class CreateEditItemActivity : AppCompatActivity() {
         // Estado activo
         binding.switchActive.isChecked = state.isActive
         
+        // Categoría - seleccionar el chip correcto
+        updateCategoryChipSelection(state.category)
+        
+        // Prueba gratuita
+        binding.switchFreeTrial.isChecked = state.isFreeTrial
+        binding.layoutFreeTrialDate.visibility = if (state.isFreeTrial) View.VISIBLE else View.GONE
+        if (state.freeTrialEndDate != null) {
+            binding.buttonFreeTrialDate.text = DateUtils.formatDate(state.freeTrialEndDate)
+        }
+        
         // Imagen
         updateImageUI(state.imagePath)
         
@@ -399,6 +520,22 @@ class CreateEditItemActivity : AppCompatActivity() {
             }
         } else {
             showNoImageState()
+        }
+    }
+
+    /**
+     * Actualizar selección de chip de categoría
+     */
+    private fun updateCategoryChipSelection(category: String?) {
+        val chipGroup = binding.chipGroupCategory
+        for (i in 0 until chipGroup.childCount) {
+            val chip = chipGroup.getChildAt(i) as? com.google.android.material.chip.Chip ?: continue
+            val chipCategory = (chip.tag as? Constants.Category)?.name
+            chip.isChecked = when {
+                category == null && i == 0 -> true // "Ninguna"
+                chipCategory != null && chipCategory == category -> true
+                else -> false
+            }
         }
     }
 
@@ -435,7 +572,7 @@ class CreateEditItemActivity : AppCompatActivity() {
      */
     private fun openCamera() {
         val intent = Intent(this, CameraActivity::class.java)
-        startActivityForResult(intent, REQUEST_CAMERA)
+        cameraLauncher.launch(intent)
     }
 
     /**
@@ -473,7 +610,7 @@ class CreateEditItemActivity : AppCompatActivity() {
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             android.R.id.home -> {
-                onBackPressed()
+                onBackPressedDispatcher.onBackPressed()
                 true
             }
             R.id.action_save -> {
@@ -485,6 +622,30 @@ class CreateEditItemActivity : AppCompatActivity() {
     }
 
     /**
+     * Configurar navegación hacia atrás con confirmación de cambios
+     */
+    private fun setupBackNavigation() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (viewModel.hasChanges()) {
+                    MaterialAlertDialogBuilder(this@CreateEditItemActivity)
+                        .setTitle("¿Descartar cambios?")
+                        .setMessage("Tienes cambios sin guardar. ¿Estás seguro de salir?")
+                        .setPositiveButton("Descartar") { _, _ ->
+                            isEnabled = false
+                            onBackPressedDispatcher.onBackPressed()
+                        }
+                        .setNegativeButton("Cancelar", null)
+                        .show()
+                } else {
+                    isEnabled = false
+                    onBackPressedDispatcher.onBackPressed()
+                }
+            }
+        })
+    }
+
+    /**
      * Guardar ítem
      */
     private fun saveItem() {
@@ -493,36 +654,6 @@ class CreateEditItemActivity : AppCompatActivity() {
         viewModel.updatePrice(binding.editTextPrice.text.toString())
         
         viewModel.saveItem()
-    }
-
-    override fun onBackPressed() {
-        if (viewModel.hasChanges()) {
-            MaterialAlertDialogBuilder(this)
-                .setTitle("¿Descartar cambios?")
-                .setMessage("Tienes cambios sin guardar. ¿Estás seguro de salir?")
-                .setPositiveButton("Descartar") { _, _ ->
-                    super.onBackPressed()
-                }
-                .setNegativeButton("Cancelar", null)
-                .show()
-        } else {
-            super.onBackPressed()
-        }
-    }
-
-    @Deprecated("Deprecated in Java")
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        
-        if (requestCode == REQUEST_CAMERA && resultCode == RESULT_OK) {
-            val imagePath = data?.getStringExtra("image_path")
-            if (imagePath != null) {
-                viewModel.updateImagePath(imagePath)
-                showSuccess("Foto guardada correctamente")
-            }
-        } else if (requestCode == REQUEST_CAMERA && resultCode == RESULT_CANCELED) {
-            // Usuario canceló la captura, no hacer nada
-        }
     }
 
     /**

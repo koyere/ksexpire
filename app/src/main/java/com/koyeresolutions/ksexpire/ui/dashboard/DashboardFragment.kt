@@ -206,6 +206,11 @@ class DashboardFragment : Fragment() {
             openCreateItem()
         }
 
+        // Botón "Agregar primer ítem" del estado vacío general
+        binding.buttonAddFirstItem.setOnClickListener {
+            openCreateItem()
+        }
+
         // Botón "Ver todas" para suscripciones
         binding.buttonViewAllSubscriptions.setOnClickListener {
             navigateToSearchWithFilter("subscriptions")

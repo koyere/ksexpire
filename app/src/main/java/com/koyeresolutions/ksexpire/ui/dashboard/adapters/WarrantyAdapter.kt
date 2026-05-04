@@ -134,6 +134,20 @@ class WarrantyAdapter(
                 }
                 buttonToggleStatus.setIconResource(toggleIcon)
 
+                // Categoría
+                if (!item.category.isNullOrBlank()) {
+                    val predefined = com.koyeresolutions.ksexpire.utils.Constants.PREDEFINED_CATEGORIES
+                        .find { it.name == item.category }
+                    textCategory.text = if (predefined != null) {
+                        "${predefined.emoji} ${item.category}"
+                    } else {
+                        item.category
+                    }
+                    textCategory.visibility = android.view.View.VISIBLE
+                } else {
+                    textCategory.visibility = android.view.View.GONE
+                }
+
                 // Animación de entrada
                 root.translationY = 50f
                 root.alpha = 0f

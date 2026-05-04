@@ -29,6 +29,8 @@ class NotificationManager(private val context: Context) {
         private const val SUBSCRIPTION_NOTIFICATION_ID_BASE = 100000
         private const val WARRANTY_30_DAYS_NOTIFICATION_ID_BASE = 200000
         private const val WARRANTY_7_DAYS_NOTIFICATION_ID_BASE = 300000
+        private const val FREE_TRIAL_2_DAYS_NOTIFICATION_ID_BASE = 400000
+        private const val FREE_TRIAL_TODAY_NOTIFICATION_ID_BASE = 500000
     }
 
     /**
@@ -146,18 +148,60 @@ class NotificationManager(private val context: Context) {
     }
 
     /**
+     * Programar notificaciones para período de prueba gratuita
+     * Notifica 2 días antes y el mismo día del vencimiento
+     */
+    fun scheduleFreeTrialNotifications(item: Item) {
+        if (!item.isFreeTrial || item.freeTrialEndDate == null || !item.isActive) return
+
+        // Notificación 2 días antes
+        val twoDaysBefore = item.freeTrialEndDate - (2 * 24 * 60 * 60 * 1000L)
+        if (twoDaysBefore > System.currentTimeMillis()) {
+            val intent = createNotificationIntent(item, NotificationType.FREE_TRIAL_2_DAYS)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                getNotificationId(item, NotificationType.FREE_TRIAL_2_DAYS),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            scheduleExactAlarmSafely(twoDaysBefore, pendingIntent)
+        }
+
+        // Notificación el mismo día
+        val sameDay = item.freeTrialEndDate
+        if (sameDay > System.currentTimeMillis()) {
+            val intent = createNotificationIntent(item, NotificationType.FREE_TRIAL_TODAY)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                getNotificationId(item, NotificationType.FREE_TRIAL_TODAY),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            scheduleExactAlarmSafely(sameDay, pendingIntent)
+        }
+    }
+
+    /**
+     * Cancelar notificaciones de prueba gratuita
+     */
+    fun cancelFreeTrialNotifications(item: Item) {
+        cancelNotification(item, NotificationType.FREE_TRIAL_2_DAYS)
+        cancelNotification(item, NotificationType.FREE_TRIAL_TODAY)
+    }
+
+    /**
      * Cancelar todas las notificaciones de un ítem
      */
     fun cancelItemNotifications(item: Item) {
-        // Cancelar notificación de suscripción
         if (item.isSubscription()) {
             cancelNotification(item, NotificationType.SUBSCRIPTION)
         }
-        
-        // Cancelar notificaciones de garantía
         if (item.isWarranty()) {
             cancelNotification(item, NotificationType.WARRANTY_30_DAYS)
             cancelNotification(item, NotificationType.WARRANTY_7_DAYS)
+        }
+        if (item.isFreeTrial) {
+            cancelFreeTrialNotifications(item)
         }
     }
 
@@ -186,6 +230,8 @@ class NotificationManager(private val context: Context) {
             NotificationType.SUBSCRIPTION -> createSubscriptionNotification(item)
             NotificationType.WARRANTY_30_DAYS -> createWarrantyNotification(item, 30)
             NotificationType.WARRANTY_7_DAYS -> createWarrantyNotification(item, 7)
+            NotificationType.FREE_TRIAL_2_DAYS -> createFreeTrialWarningNotification(item)
+            NotificationType.FREE_TRIAL_TODAY -> createFreeTrialTodayNotification(item)
         }
 
         notificationManager.notify(
@@ -236,6 +282,57 @@ class NotificationManager(private val context: Context) {
     }
 
     /**
+     * Crear notificación para prueba gratuita (2 días antes)
+     */
+    private fun createFreeTrialWarningNotification(item: Item): NotificationCompat.Builder {
+        val title = context.getString(R.string.notification_free_trial_warning_title, item.name)
+        val text = if (item.price != null) {
+            context.getString(
+                R.string.notification_free_trial_warning_text_price,
+                CurrencyUtils.formatPrice(context, item.price)
+            )
+        } else {
+            context.getString(R.string.notification_free_trial_warning_text)
+        }
+
+        return NotificationCompat.Builder(context, NotificationChannels.FREE_TRIAL_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_warning)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(createMainActivityIntent())
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+    }
+
+    /**
+     * Crear notificación para prueba gratuita (mismo día)
+     */
+    private fun createFreeTrialTodayNotification(item: Item): NotificationCompat.Builder {
+        val title = context.getString(R.string.notification_free_trial_today_title, item.name)
+        val text = if (item.price != null) {
+            context.getString(
+                R.string.notification_free_trial_today_text_price,
+                item.name,
+                CurrencyUtils.formatPrice(context, item.price)
+            )
+        } else {
+            context.getString(R.string.notification_free_trial_today_text, item.name)
+        }
+
+        return NotificationCompat.Builder(context, NotificationChannels.FREE_TRIAL_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_warning)
+            .setContentTitle(title)
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(createMainActivityIntent())
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+    }
+
+    /**
      * Crear intent para notificación
      */
     private fun createNotificationIntent(item: Item, type: NotificationType): Intent {
@@ -271,6 +368,8 @@ class NotificationManager(private val context: Context) {
             NotificationType.SUBSCRIPTION -> SUBSCRIPTION_NOTIFICATION_ID_BASE + item.id.toInt()
             NotificationType.WARRANTY_30_DAYS -> WARRANTY_30_DAYS_NOTIFICATION_ID_BASE + item.id.toInt()
             NotificationType.WARRANTY_7_DAYS -> WARRANTY_7_DAYS_NOTIFICATION_ID_BASE + item.id.toInt()
+            NotificationType.FREE_TRIAL_2_DAYS -> FREE_TRIAL_2_DAYS_NOTIFICATION_ID_BASE + item.id.toInt()
+            NotificationType.FREE_TRIAL_TODAY -> FREE_TRIAL_TODAY_NOTIFICATION_ID_BASE + item.id.toInt()
         }
     }
 
@@ -281,18 +380,18 @@ class NotificationManager(private val context: Context) {
     suspend fun rescheduleAllNotifications(items: List<Item>) {
         items.filter { it.isActive }.forEach { item ->
             when {
+                item.isFreeTrial -> scheduleFreeTrialNotifications(item)
                 item.isSubscription() -> scheduleSubscriptionNotification(item)
                 item.isWarranty() -> scheduleWarrantyNotifications(item)
             }
         }
     }
 
-    /**
-     * Tipos de notificación
-     */
     enum class NotificationType {
         SUBSCRIPTION,
         WARRANTY_30_DAYS,
-        WARRANTY_7_DAYS
+        WARRANTY_7_DAYS,
+        FREE_TRIAL_2_DAYS,
+        FREE_TRIAL_TODAY
     }
 }

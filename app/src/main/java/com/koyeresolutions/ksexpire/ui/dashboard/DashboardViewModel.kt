@@ -42,10 +42,29 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         loadDashboardData()
+        // Observar cambios en suscripciones y garantías para actualizar isEmpty
+        viewModelScope.launch {
+            subscriptions.collect { subs ->
+                val warrs = _uiState.value.warrantiesCount
+                _uiState.value = _uiState.value.copy(
+                    subscriptionsCount = subs.size,
+                    isEmpty = subs.isEmpty() && warrs == 0
+                )
+            }
+        }
+        viewModelScope.launch {
+            warranties.collect { warrs ->
+                val subs = _uiState.value.subscriptionsCount
+                _uiState.value = _uiState.value.copy(
+                    warrantiesCount = warrs.size,
+                    isEmpty = subs == 0 && warrs.isEmpty()
+                )
+            }
+        }
     }
 
     /**
-     * Cargar datos del dashboard
+     * Cargar datos del dashboard (gasto mensual)
      */
     private fun loadDashboardData() {
         viewModelScope.launch {
@@ -57,19 +76,9 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 val monthlyExpense = repository.calculateMonthlyExpense()
                 _monthlyExpense.value = monthlyExpense
 
-                // Verificar si hay datos para determinar estado vacío
-                val stats = repository.getDashboardStats()
-                val subscriptionsCount = stats.subscriptionsCount.value ?: 0
-                val warrantiesCount = stats.warrantiesCount.value ?: 0
-                val isEmpty = subscriptionsCount == 0 && warrantiesCount == 0
-
-                // Actualizar estado del UI
                 _uiState.value = _uiState.value.copy(
                     monthlyExpense = monthlyExpense,
-                    subscriptionsCount = subscriptionsCount,
-                    warrantiesCount = warrantiesCount,
                     isLoading = false,
-                    isEmpty = isEmpty,
                     error = null
                 )
 

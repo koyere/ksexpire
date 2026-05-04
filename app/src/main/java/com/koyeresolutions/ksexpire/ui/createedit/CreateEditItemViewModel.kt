@@ -80,7 +80,11 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
                         billingFrequency = item.billingFrequency ?: Constants.FREQUENCY_MONTHLY,
                         imagePath = item.imagePath,
                         isActive = item.isActive,
-                        isEditMode = true
+                        isEditMode = true,
+                        category = item.category,
+                        categoryColor = item.categoryColor,
+                        isFreeTrial = item.isFreeTrial,
+                        freeTrialEndDate = item.freeTrialEndDate
                     )
                 } else {
                     _saveResult.value = SaveResult.Error("Ítem no encontrado")
@@ -154,6 +158,23 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
     }
 
     /**
+     * Actualizar categoría
+     */
+    fun updateCategory(category: String?, color: String?) {
+        _uiState.value = _uiState.value.copy(category = category, categoryColor = color)
+    }
+
+    /**
+     * Actualizar estado de prueba gratuita
+     */
+    fun updateFreeTrial(isFreeTrial: Boolean, endDate: Long? = null) {
+        _uiState.value = _uiState.value.copy(
+            isFreeTrial = isFreeTrial,
+            freeTrialEndDate = endDate
+        )
+    }
+
+    /**
      * Alternar estado activo
      */
     fun toggleActiveStatus() {
@@ -223,7 +244,6 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
 
                 // Crear o actualizar ítem
                 val item = if (isEditMode && currentItem != null) {
-                    // Actualizar ítem existente
                     currentItem!!.copy(
                         type = state.itemType,
                         name = state.name.trim(),
@@ -233,10 +253,13 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
                         billingFrequency = state.billingFrequency,
                         imagePath = state.imagePath,
                         isActive = state.isActive,
+                        category = state.category,
+                        categoryColor = state.categoryColor,
+                        isFreeTrial = state.isFreeTrial,
+                        freeTrialEndDate = state.freeTrialEndDate,
                         updatedAt = System.currentTimeMillis()
                     )
                 } else {
-                    // Crear nuevo ítem
                     Item(
                         type = state.itemType,
                         name = state.name.trim(),
@@ -245,7 +268,11 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
                         expiryDate = state.expiryDate,
                         billingFrequency = state.billingFrequency,
                         imagePath = state.imagePath,
-                        isActive = state.isActive
+                        isActive = state.isActive,
+                        category = state.category,
+                        categoryColor = state.categoryColor,
+                        isFreeTrial = state.isFreeTrial,
+                        freeTrialEndDate = state.freeTrialEndDate
                     )
                 }
 
@@ -310,7 +337,11 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
                 state.expiryDate != original.expiryDate ||
                 state.billingFrequency != original.billingFrequency ||
                 state.imagePath != original.imagePath ||
-                state.isActive != original.isActive
+                state.isActive != original.isActive ||
+                state.category != original.category ||
+                state.categoryColor != original.categoryColor ||
+                state.isFreeTrial != original.isFreeTrial ||
+                state.freeTrialEndDate != original.freeTrialEndDate
     }
 
     /**
@@ -321,11 +352,15 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
         val name: String = "",
         val price: String = "",
         val purchaseDate: Long = System.currentTimeMillis(),
-        val expiryDate: Long = System.currentTimeMillis() + (30 * 24 * 60 * 60 * 1000L), // 30 días por defecto
+        val expiryDate: Long = System.currentTimeMillis() + (30 * 24 * 60 * 60 * 1000L),
         val billingFrequency: String? = Constants.FREQUENCY_MONTHLY,
         val imagePath: String? = null,
         val isActive: Boolean = true,
-        val isEditMode: Boolean = false
+        val isEditMode: Boolean = false,
+        val category: String? = null,
+        val categoryColor: String? = null,
+        val isFreeTrial: Boolean = false,
+        val freeTrialEndDate: Long? = null
     )
 
     /**

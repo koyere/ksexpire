@@ -130,7 +130,7 @@ class SearchFragment : Fragment() {
             binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
         }
 
-        // Observar query actual (lifecycle-aware)
+        // Observar Flows con lifecycle awareness
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 launch {
@@ -146,6 +146,11 @@ class SearchFragment : Fragment() {
                 launch {
                     viewModel.searchStats.collect { stats ->
                         updateSearchStats(stats)
+                    }
+                }
+                launch {
+                    viewModel.usedCategories.collect { categories ->
+                        updateCategoryChips(categories)
                     }
                 }
             }
@@ -283,6 +288,41 @@ class SearchFragment : Fragment() {
         binding.textTotalItems.text = getString(R.string.search_total_items, stats.totalItems)
         binding.textSubscriptionsCount.text = getString(R.string.search_subscriptions_count, stats.subscriptionsCount)
         binding.textWarrantiesCount.text = getString(R.string.search_warranties_count, stats.warrantiesCount)
+    }
+
+    /**
+     * Actualizar chips de categoría dinámicamente
+     */
+    private fun updateCategoryChips(categories: List<String>) {
+        val chipGroup = binding.chipGroupCategories
+        chipGroup.removeAllViews()
+        
+        if (categories.isEmpty()) {
+            binding.scrollCategoryFilters.visibility = View.GONE
+            return
+        }
+        
+        binding.scrollCategoryFilters.visibility = View.VISIBLE
+        
+        // Chip "Todas"
+        val allChip = com.google.android.material.chip.Chip(requireContext()).apply {
+            text = "Todas"
+            isCheckable = true
+            isChecked = true
+            setOnClickListener { viewModel.setCategoryFilter(null) }
+        }
+        chipGroup.addView(allChip)
+        
+        // Chips por categoría usada
+        categories.forEach { categoryName ->
+            val predefined = Constants.PREDEFINED_CATEGORIES.find { it.name == categoryName }
+            val chip = com.google.android.material.chip.Chip(requireContext()).apply {
+                text = if (predefined != null) "${predefined.emoji} $categoryName" else categoryName
+                isCheckable = true
+                setOnClickListener { viewModel.setCategoryFilter(categoryName) }
+            }
+            chipGroup.addView(chip)
+        }
     }
 
     /**

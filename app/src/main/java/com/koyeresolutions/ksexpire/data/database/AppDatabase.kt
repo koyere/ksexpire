@@ -87,13 +87,18 @@ abstract class AppDatabase : RoomDatabase() {
         }
 
         /**
-         * Migración de versión 1 a 2 (ejemplo para futuras actualizaciones)
-         * Actualmente no se usa, pero está preparada para cuando sea necesaria
+         * Migración de versión 1 a 2
+         * Agrega campos de categoría, color, prueba gratuita
          */
         private val MIGRATION_1_2 = object : Migration(1, 2) {
-            override fun migrate(database: SupportSQLiteDatabase) {
-                // Ejemplo de migración futura:
-                // database.execSQL("ALTER TABLE items ADD COLUMN newColumn TEXT")
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE items ADD COLUMN category TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE items ADD COLUMN categoryColor TEXT DEFAULT NULL")
+                db.execSQL("ALTER TABLE items ADD COLUMN isFreeTrial INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE items ADD COLUMN freeTrialEndDate INTEGER DEFAULT NULL")
+                
+                // Índice para filtrar por categoría
+                db.execSQL("CREATE INDEX IF NOT EXISTS index_items_category ON items(category)")
             }
         }
 

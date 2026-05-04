@@ -80,6 +80,29 @@ data class Item(
     val isActive: Boolean = true,
     
     /**
+     * Categoría del ítem (opcional)
+     * Ej: "Streaming", "Música", "Hogar"
+     */
+    val category: String? = null,
+    
+    /**
+     * Color hex de la categoría (opcional)
+     * Ej: "#E91E63"
+     */
+    val categoryColor: String? = null,
+    
+    /**
+     * Indica si es un período de prueba gratuita
+     */
+    val isFreeTrial: Boolean = false,
+    
+    /**
+     * Fecha en que termina la prueba gratuita (timestamp ms)
+     * Solo aplica cuando isFreeTrial = true
+     */
+    val freeTrialEndDate: Long? = null,
+    
+    /**
      * Fecha de creación del registro
      * Timestamp en milisegundos
      */
@@ -123,6 +146,24 @@ data class Item(
     fun isExpiringSoon(): Boolean {
         val days = getDaysUntilExpiry()
         return days in 0..7
+    }
+
+    /**
+     * Calcular días hasta el fin de la prueba gratuita
+     * @return Número de días (positivo = futuro, negativo = pasado), null si no es prueba
+     */
+    fun getDaysUntilTrialEnd(): Int? {
+        if (!isFreeTrial || freeTrialEndDate == null) return null
+        val diffMillis = freeTrialEndDate - System.currentTimeMillis()
+        return (diffMillis / (1000 * 60 * 60 * 24)).toInt()
+    }
+
+    /**
+     * Verificar si la prueba gratuita está por vencer (3 días o menos)
+     */
+    fun isTrialExpiringSoon(): Boolean {
+        val days = getDaysUntilTrialEnd() ?: return false
+        return days in 0..3
     }
 
     /**

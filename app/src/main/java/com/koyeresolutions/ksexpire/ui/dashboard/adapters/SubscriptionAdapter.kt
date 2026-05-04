@@ -72,6 +72,30 @@ class SubscriptionAdapter(
 
                 // Indicador de vencimiento próximo
                 val daysUntilExpiry = item.getDaysUntilExpiry()
+                
+                // Prueba gratuita
+                if (item.isFreeTrial && item.freeTrialEndDate != null) {
+                    textFreeTrialBadge.visibility = android.view.View.VISIBLE
+                    val trialDaysLeft = ((item.freeTrialEndDate - System.currentTimeMillis()) / (1000 * 60 * 60 * 24)).toInt()
+                    when {
+                        trialDaysLeft <= 0 -> {
+                            textFreeTrialCountdown.text = root.context.getString(R.string.free_trial_expired)
+                            textFreeTrialCountdown.visibility = android.view.View.VISIBLE
+                        }
+                        else -> {
+                            textFreeTrialCountdown.text = root.context.getString(
+                                R.string.free_trial_countdown,
+                                com.koyeresolutions.ksexpire.utils.DateUtils.formatDate(item.freeTrialEndDate),
+                                trialDaysLeft
+                            )
+                            textFreeTrialCountdown.visibility = android.view.View.VISIBLE
+                        }
+                    }
+                } else {
+                    textFreeTrialBadge.visibility = android.view.View.GONE
+                    textFreeTrialCountdown.visibility = android.view.View.GONE
+                }
+
                 when {
                     daysUntilExpiry <= 0 -> {
                         indicatorUrgency.setBackgroundColor(root.context.getColor(R.color.danger))
@@ -106,6 +130,20 @@ class SubscriptionAdapter(
                     R.drawable.ic_play
                 }
                 buttonToggleStatus.setIconResource(toggleIcon)
+
+                // Categoría
+                if (!item.category.isNullOrBlank()) {
+                    val predefined = com.koyeresolutions.ksexpire.utils.Constants.PREDEFINED_CATEGORIES
+                        .find { it.name == item.category }
+                    textCategory.text = if (predefined != null) {
+                        "${predefined.emoji} ${item.category}"
+                    } else {
+                        item.category
+                    }
+                    textCategory.visibility = android.view.View.VISIBLE
+                } else {
+                    textCategory.visibility = android.view.View.GONE
+                }
 
                 // Animación de entrada
                 root.alpha = 0f

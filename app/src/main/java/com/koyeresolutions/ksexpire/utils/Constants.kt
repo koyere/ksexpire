@@ -7,7 +7,7 @@ object Constants {
     
     // Base de datos
     const val DATABASE_NAME = "ks_expire_database"
-    const val DATABASE_VERSION = 1
+    const val DATABASE_VERSION = 2
     
     // Tipos de ítems
     const val ITEM_TYPE_WARRANTY = 0
@@ -62,4 +62,35 @@ object Constants {
     const val PREF_CURRENCY_SYMBOL = "currency_symbol"
     const val PREF_ITEMS_CREATED_COUNT = "items_created_count"
     const val PREF_REVIEW_REQUESTED = "review_requested"
+    const val PREF_THEME_MODE = "theme_mode"
+    
+    // Tema
+    const val THEME_SYSTEM = 0
+    const val THEME_LIGHT = 1
+    const val THEME_DARK = 2
+    
+    // Categorías predefinidas
+    val PREDEFINED_CATEGORIES = listOf(
+        Category("Streaming", "#E91E63", "🎬"),
+        Category("Música", "#9C27B0", "🎵"),
+        Category("Gaming", "#673AB7", "🎮"),
+        Category("Cloud/Storage", "#2196F3", "☁️"),
+        Category("Hogar", "#4CAF50", "🏠"),
+        Category("Fitness", "#FF9800", "💪"),
+        Category("Noticias/Lectura", "#795548", "📰"),
+        Category("Seguridad", "#607D8B", "🛡️"),
+        Category("Compras", "#F44336", "🛒"),
+        Category("Apps/Software", "#00BCD4", "📱"),
+        Category("Salud", "#8BC34A", "🏥"),
+        Category("Educación", "#3F51B5", "🎓")
+    )
+    
+    /**
+     * Categoría predefinida
+     */
+    data class Category(
+        val name: String,
+        val color: String,
+        val emoji: String
+    )
 }

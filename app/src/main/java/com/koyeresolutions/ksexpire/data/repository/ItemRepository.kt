@@ -91,6 +91,22 @@ class ItemRepository(
         }
     }
 
+    /**
+     * Buscar ítems con filtros combinados (tipo + categoría + texto)
+     */
+    fun searchItemsFiltered(query: String, type: Int?, category: String?): Flow<List<Item>> {
+        return itemDao.searchItemsFiltered(
+            query = if (query.isBlank()) "" else query.trim(),
+            type = type,
+            category = category
+        )
+    }
+
+    /**
+     * Obtener categorías usadas por el usuario
+     */
+    fun getUsedCategories(): Flow<List<String>> = itemDao.getUsedCategories()
+
     // ==================== DASHBOARD Y ESTADÍSTICAS ====================
 
     /**

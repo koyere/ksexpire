@@ -49,6 +49,11 @@ class NotificationService(private val context: Context) {
             return
         }
 
+        // Prueba gratuita tiene prioridad
+        if (item.isFreeTrial && item.freeTrialEndDate != null) {
+            notificationManager.scheduleFreeTrialNotifications(item)
+        }
+
         when {
             item.isSubscription() && isSubscriptionNotificationsEnabled() -> {
                 notificationManager.scheduleSubscriptionNotification(item)

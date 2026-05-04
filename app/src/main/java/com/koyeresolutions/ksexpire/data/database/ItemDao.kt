@@ -286,6 +286,36 @@ interface ItemDao {
     // ==================== CONSULTAS PARA BACKUP/RESTORE ====================
 
     /**
+     * Obtener todas las categorías distintas usadas por el usuario
+     */
+    @Query("SELECT DISTINCT category FROM items WHERE category IS NOT NULL AND isActive = 1 ORDER BY category ASC")
+    fun getUsedCategories(): Flow<List<String>>
+
+    /**
+     * Buscar ítems por categoría
+     */
+    @Query("""
+        SELECT * FROM items 
+        WHERE category = :category 
+        AND isActive = 1 
+        ORDER BY expiryDate ASC
+    """)
+    fun getItemsByCategory(category: String): Flow<List<Item>>
+
+    /**
+     * Buscar ítems por nombre, tipo y categoría
+     */
+    @Query("""
+        SELECT * FROM items 
+        WHERE name LIKE '%' || :query || '%' 
+        AND (:type IS NULL OR type = :type)
+        AND (:category IS NULL OR category = :category)
+        AND isActive = 1 
+        ORDER BY name ASC
+    """)
+    fun searchItemsFiltered(query: String, type: Int?, category: String?): Flow<List<Item>>
+
+    /**
      * Obtener todos los ítems para backup (sin Flow para operación única)
      */
     @Query("SELECT * FROM items ORDER BY createdAt ASC")

@@ -62,8 +62,19 @@ class KSExpireApplication : Application() {
                 setShowBadge(true)
             }
             
+            // Canal para pruebas gratuitas (prioridad alta)
+            val freeTrialChannel = NotificationChannel(
+                NotificationChannels.FREE_TRIAL_CHANNEL_ID,
+                getString(R.string.notification_channel_free_trial),
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                description = "Alertas de vencimiento de pruebas gratuitas"
+                enableVibration(true)
+                setShowBadge(true)
+            }
+            
             notificationManager.createNotificationChannels(
-                listOf(subscriptionChannel, warrantyChannel)
+                listOf(subscriptionChannel, warrantyChannel, freeTrialChannel)
             )
         }
     }

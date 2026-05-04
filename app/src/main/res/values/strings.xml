@@ -30,6 +30,9 @@
     <string name="form_subscription_start_date">Fecha de inicio</string>
     <string name="form_next_billing_date">Próximo cobro</string>
     <string name="form_warranty_expiry_date">Vencimiento de garantía</string>
+    <string name="form_category">Categoría</string>
+    <string name="form_category_hint">Opcional — ayuda a organizar tus ítems</string>
+    <string name="form_category_other">Otra</string>
     <string name="hint_name_subscription">Ej: Netflix, Spotify, Amazon Prime</string>
     <string name="hint_name_warranty">Ej: TV Samsung, Laptop Dell, iPhone</string>
     <string name="hint_price_subscription">Precio mensual de la suscripción</string>
@@ -39,6 +42,13 @@
     <string name="form_retake_photo">Cambiar foto</string>
     <string name="form_save">Guardar</string>
     <string name="form_cancel">Cancelar</string>
+    <string name="form_free_trial">Período de prueba gratuita</string>
+    <string name="form_free_trial_hint">Te avisaremos antes de que termine</string>
+    <string name="form_free_trial_end_date">¿Cuándo termina la prueba?</string>
+    <string name="free_trial_badge">PRUEBA GRATUITA</string>
+    <string name="free_trial_countdown">Cancela antes del %1$s (quedan %2$d días)</string>
+    <string name="free_trial_expires_today">¡La prueba termina hoy!</string>
+    <string name="free_trial_expired">Prueba terminada</string>
     
     <!-- Frecuencias de cobro -->
     <string name="frequency_monthly">Mensual</string>
@@ -70,11 +80,18 @@
     <!-- Notificaciones -->
     <string name="notification_channel_subscriptions">Recordatorios de Suscripciones</string>
     <string name="notification_channel_warranties">Recordatorios de Garantías</string>
+    <string name="notification_channel_free_trial">Alertas de Pruebas Gratuitas</string>
     <string name="notification_subscription_title">Próximo cobro: %1$s</string>
     <string name="notification_subscription_text">Se cobrará %1$s mañana</string>
     <string name="notification_subscription_text_no_price">Se renovará mañana</string>
     <string name="notification_warranty_title">Garantía por vencer: %1$s</string>
     <string name="notification_warranty_text">Vence en %1$d días</string>
+    <string name="notification_free_trial_warning_title">⚠️ Prueba gratuita: %1$s</string>
+    <string name="notification_free_trial_warning_text_price">Tu prueba gratuita termina en 2 días. ¡Cancela ahora si no quieres que te cobren %1$s!</string>
+    <string name="notification_free_trial_warning_text">Tu prueba gratuita termina en 2 días. ¡Cancela ahora si no quieres que te cobren!</string>
+    <string name="notification_free_trial_today_title">🚨 ¡Hoy termina tu prueba! %1$s</string>
+    <string name="notification_free_trial_today_text_price">Hoy termina tu prueba gratuita de %1$s. Si no cancelas, se cobrará %2$s.</string>
+    <string name="notification_free_trial_today_text">Hoy termina tu prueba gratuita de %1$s. ¡Cancela ahora si no deseas continuar!</string>
     <string name="notification_permission_title">Permitir notificaciones</string>
     <string name="notification_permission_rationale">KS Expire necesita enviar notificaciones para recordarte sobre cobros de suscripciones y vencimientos de garantías. Sin este permiso, no recibirás recordatorios.</string>
     <string name="exact_alarm_permission_title">Alarmas exactas</string>

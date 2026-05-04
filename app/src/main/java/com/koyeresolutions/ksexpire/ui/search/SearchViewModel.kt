@@ -30,6 +30,13 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     private val _searchFilter = MutableStateFlow(SearchFilter.ALL)
     val currentFilter: StateFlow<SearchFilter> = _searchFilter.asStateFlow()
 
+    // Filtro de categoría
+    private val _categoryFilter = MutableStateFlow<String?>(null)
+    val categoryFilter: StateFlow<String?> = _categoryFilter.asStateFlow()
+
+    // Categorías usadas
+    val usedCategories = repository.getUsedCategories()
+
     // Flag para evitar re-aplicar argumentos de navegación en rotación
     var hasProcessedNavigationArgs = false
 
@@ -54,14 +61,14 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
      * Configurar búsqueda reactiva
      */
     private fun setupSearch() {
-        // Combinar query y filtro para búsqueda reactiva
         combine(
-            _searchQuery.debounce(300), // Debounce para evitar búsquedas excesivas
-            _searchFilter
-        ) { query, filter ->
-            Pair(query, filter)
-        }.onEach { (query, filter) ->
-            performSearch(query, filter)
+            _searchQuery.debounce(300),
+            _searchFilter,
+            _categoryFilter
+        ) { query, filter, category ->
+            Triple(query, filter, category)
+        }.onEach { (query, filter, category) ->
+            performSearch(query, filter, category)
         }.launchIn(viewModelScope)
     }
 
@@ -100,55 +107,43 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     /**
+     * Establecer filtro de categoría
+     */
+    fun setCategoryFilter(category: String?) {
+        _categoryFilter.value = category
+    }
+
+    /**
      * Limpiar búsqueda
      */
     fun clearSearch() {
         _searchQuery.value = ""
         _searchFilter.value = SearchFilter.ALL
+        _categoryFilter.value = null
     }
 
-    /**
-     * Refrescar búsqueda actual
-     */
     fun refreshSearch() {
         val currentQuery = _searchQuery.value
         val currentFilter = _searchFilter.value
-        performSearch(currentQuery, currentFilter)
+        val currentCategory = _categoryFilter.value
+        performSearch(currentQuery, currentFilter, currentCategory)
     }
 
     /**
-     * Realizar búsqueda interna
+     * Realizar búsqueda con filtros combinados
      */
-    private fun performSearch(query: String, filter: SearchFilter) {
+    private fun performSearch(query: String, filter: SearchFilter, category: String?) {
         viewModelScope.launch {
             try {
                 _isLoading.value = true
 
-                val results = when {
-                    // Si hay filtro específico pero no query, mostrar todos de ese tipo
-                    query.isBlank() && filter == SearchFilter.SUBSCRIPTIONS -> {
-                        repository.getActiveSubscriptions().first()
-                    }
-                    query.isBlank() && filter == SearchFilter.WARRANTIES -> {
-                        repository.getActiveWarranties().first()
-                    }
-                    query.isBlank() && filter == SearchFilter.ALL -> {
-                        // Mostrar todos los items activos cuando se selecciona "Todos"
-                        repository.getAllActiveItems().first()
-                    }
-                    // Búsqueda con query
-                    filter == SearchFilter.ALL -> {
-                        repository.searchItems(query).first()
-                    }
-                    filter == SearchFilter.SUBSCRIPTIONS -> {
-                        repository.searchItemsByType(query, Constants.ITEM_TYPE_SUBSCRIPTION).first()
-                    }
-                    filter == SearchFilter.WARRANTIES -> {
-                        repository.searchItemsByType(query, Constants.ITEM_TYPE_WARRANTY).first()
-                    }
-                    else -> emptyList()
+                val typeFilter: Int? = when (filter) {
+                    SearchFilter.SUBSCRIPTIONS -> Constants.ITEM_TYPE_SUBSCRIPTION
+                    SearchFilter.WARRANTIES -> Constants.ITEM_TYPE_WARRANTY
+                    SearchFilter.ALL -> null
                 }
 
+                val results = repository.searchItemsFiltered(query, typeFilter, category).first()
                 _searchResults.value = results
 
             } catch (e: Exception) {

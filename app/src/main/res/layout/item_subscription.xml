@@ -82,8 +82,38 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="4dp"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="#424242"
+                android:textColor="?attr/colorOnSurfaceVariant"
                 tools:text="Próximo cobro: Mañana" />
+
+            <!-- Badge de prueba gratuita -->
+            <TextView
+                android:id="@+id/text_free_trial_badge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:background="@drawable/bg_type_badge"
+                android:backgroundTint="@color/danger"
+                android:paddingHorizontal="8dp"
+                android:paddingVertical="2dp"
+                android:text="@string/free_trial_badge"
+                android:textColor="@android:color/white"
+                android:textSize="10sp"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <!-- Countdown de prueba gratuita -->
+            <TextView
+                android:id="@+id/text_free_trial_countdown"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="4dp"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="@color/danger"
+                android:textStyle="bold"
+                android:visibility="gone"
+                tools:text="Cancela antes del 15 jun (quedan 3 días)"
+                tools:visibility="visible" />
 
             <!-- Estado -->
             <TextView
@@ -94,6 +124,18 @@
                 android:textColor="?attr/colorSecondary"
                 android:textStyle="bold"
                 tools:text="Activa" />
+
+            <!-- Categoría -->
+            <TextView
+                android:id="@+id/text_category"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:textAppearance="?attr/textAppearanceBodySmall"
+                android:textColor="?attr/colorOnSurfaceVariant"
+                android:visibility="gone"
+                tools:text="🎬 Streaming"
+                tools:visibility="visible" />
 
         </LinearLayout>
 
