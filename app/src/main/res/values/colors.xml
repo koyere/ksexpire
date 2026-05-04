@@ -104,4 +104,7 @@
     <color name="brand_blue">#1976D2</color>
     <color name="brand_green">#4CAF50</color>
     <color name="brand_orange">#FF9800</color>
+    
+    <!-- Social -->
+    <color name="discord_color">#5865F2</color>
 </resources>

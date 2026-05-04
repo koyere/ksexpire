@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dark mode overrides for semantic colors -->
+    
+    <!-- Subscription colors for dark mode -->
+    <color name="subscription_primary">#90CAF9</color>
+    <color name="subscription_container">#1A237E</color>
+    
+    <!-- Warranty colors for dark mode -->
+    <color name="warranty_primary">#FFCC80</color>
+    <color name="warranty_container">#3E2723</color>
+    
+    <!-- Brand colors for dark mode -->
+    <color name="brand_blue">#90CAF9</color>
+    <color name="brand_green">#A5D6A7</color>
+    <color name="brand_orange">#FFCC80</color>
+    
+    <!-- Discord color stays the same -->
+    <color name="discord_color">#5865F2</color>
+</resources>

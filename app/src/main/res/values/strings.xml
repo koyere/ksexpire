@@ -6,6 +6,7 @@
     <!-- Navegación -->
     <string name="nav_dashboard">Inicio</string>
     <string name="nav_search">Buscar</string>
+    <string name="nav_reports">Reportes</string>
     <string name="nav_about">Acerca de</string>
     
     <!-- Dashboard -->
@@ -15,6 +16,7 @@
     <string name="dashboard_no_subscriptions">No tienes suscripciones registradas</string>
     <string name="dashboard_no_warranties">No tienes garantías registradas</string>
     <string name="dashboard_add_first_item">Agrega tu primer ítem</string>
+    <string name="dashboard_annual_projection">Proyección anual: %1$s</string>
     
     <!-- Tipos de ítems -->
     <string name="item_type_subscription">Suscripción</string>
@@ -110,6 +112,20 @@
     <string name="restore_confirm_message">Esta acción reemplazará todos los datos actuales de la aplicación (suscripciones, garantías e imágenes) con los del archivo de backup seleccionado.\n\nEsta acción no se puede deshacer.</string>
     <string name="restore_confirm_proceed">Restaurar</string>
     
+    <!-- Reportes -->
+    <string name="reports_title">Reportes Financieros</string>
+    <string name="reports_summary">Resumen Financiero</string>
+    <string name="reports_monthly">Mensual</string>
+    <string name="reports_annual">Anual</string>
+    <string name="reports_by_category">Gasto por Categoría</string>
+    <string name="reports_distribution">Distribución de Gastos</string>
+    <string name="reports_top_expenses">Top Suscripciones más Caras</string>
+    <string name="reports_share">Compartir Resumen</string>
+    <string name="reports_no_data">Agrega suscripciones con categoría para ver la gráfica</string>
+    <string name="reports_no_subscriptions">No hay suscripciones activas</string>
+    <string name="reports_subs_count">%1$d suscripciones</string>
+    <string name="reports_warr_count">%1$d garantías</string>
+    
     <!-- Sobre el desarrollador -->
     <string name="about_title">Sobre el Desarrollador</string>
     <string name="about_description">Desarrollado por Koyere Solutions. Si te ha gustado esta app, compártela.</string>
@@ -161,6 +177,12 @@
     <string name="dialog_delete_message">¿Estás seguro de eliminar \"%1$s\"?</string>
     <string name="dialog_cancel">Cancelar</string>
     <string name="action_retry">Reintentar</string>
+    
+    <!-- Monedas -->
+    <string name="settings_theme">Apariencia</string>
+    <string name="settings_theme_system">Sistema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
     
     <!-- Monedas -->
     <string name="currency_usd">$ USD</string>

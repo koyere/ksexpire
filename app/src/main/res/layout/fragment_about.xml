@@ -290,7 +290,7 @@
             android:clickable="true"
             android:focusable="true"
             app:cardCornerRadius="12dp"
-            app:strokeColor="#5865F2"
+            app:strokeColor="@color/discord_color"
             app:strokeWidth="1dp">
 
             <LinearLayout

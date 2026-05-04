@@ -83,6 +83,10 @@ class DashboardFragment : Fragment() {
                         openNotificationSettings()
                         true
                     }
+                    R.id.action_about -> {
+                        openAboutActivity()
+                        true
+                    }
                     else -> false
                 }
             }
@@ -100,9 +104,9 @@ class DashboardFragment : Fragment() {
         
         // Configurar colores del SwipeRefresh
         binding.swipeRefresh.setColorSchemeResources(
-            R.color.md_theme_light_primary,
-            R.color.md_theme_light_secondary,
-            R.color.md_theme_light_tertiary
+            R.color.brand_blue,
+            R.color.brand_green,
+            R.color.brand_orange
         )
     }
 
@@ -157,6 +161,12 @@ class DashboardFragment : Fragment() {
         // Observar gasto mensual
         viewModel.monthlyExpense.observe(viewLifecycleOwner, Observer { expense ->
             binding.textMonthlyExpense.text = viewModel.getFormattedMonthlyExpense()
+        })
+
+        // Observar proyección anual
+        viewModel.annualProjection.observe(viewLifecycleOwner, Observer { annual ->
+            val formatted = viewModel.getFormattedAnnualProjection()
+            binding.textAnnualProjection.text = getString(R.string.dashboard_annual_projection, formatted)
         })
 
         // Observar estado de carga
@@ -299,6 +309,14 @@ class DashboardFragment : Fragment() {
      */
     private fun openNotificationSettings() {
         val intent = Intent(requireContext(), NotificationSettingsActivity::class.java)
+        startActivity(intent)
+    }
+
+    /**
+     * Abrir pantalla Acerca de
+     */
+    private fun openAboutActivity() {
+        val intent = Intent(requireContext(), com.koyeresolutions.ksexpire.ui.about.AboutActivity::class.java)
         startActivity(intent)
     }
 

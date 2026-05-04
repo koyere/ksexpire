@@ -89,7 +89,7 @@ class WarrantyAdapter(
                 val textColor = when (warrantyStatus) {
                     0 -> R.color.danger
                     1 -> R.color.warning
-                    else -> R.color.md_theme_light_onSurfaceVariant
+                    else -> R.color.warranty_primary
                 }
                 textExpiryDate.setTextColor(root.context.getColor(textColor))
 

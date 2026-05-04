@@ -84,6 +84,13 @@
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.KSExpire.NoActionBar" />
 
+        <!-- Actividad Acerca de -->
+        <activity
+            android:name=".ui.about.AboutActivity"
+            android:exported="false"
+            android:parentActivityName=".MainActivity"
+            android:theme="@style/Theme.KSExpire" />
+
         <!-- Proveedor de archivos para compartir imágenes -->
         <provider
             android:name="androidx.core.content.FileProvider"

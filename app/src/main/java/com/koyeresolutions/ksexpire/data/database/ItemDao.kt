@@ -292,6 +292,19 @@ interface ItemDao {
     fun getUsedCategories(): Flow<List<String>>
 
     /**
+     * Obtener suscripciones activas ordenadas por precio (más caras primero)
+     */
+    @Query("""
+        SELECT * FROM items 
+        WHERE type = ${Constants.ITEM_TYPE_SUBSCRIPTION} 
+        AND isActive = 1 
+        AND price IS NOT NULL 
+        ORDER BY price DESC 
+        LIMIT :limit
+    """)
+    suspend fun getTopExpensiveSubscriptions(limit: Int = 5): List<Item>
+
+    /**
      * Buscar ítems por categoría
      */
     @Query("""

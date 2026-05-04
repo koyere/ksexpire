@@ -179,6 +179,9 @@ dependencies {
     // PhotoView para zoom de imágenes
     implementation 'com.github.chrisbanes:PhotoView:2.3.0'
     
+    // MPAndroidChart para gráficas de reportes
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+    
     // Kotlinx Serialization para JSON
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'
     

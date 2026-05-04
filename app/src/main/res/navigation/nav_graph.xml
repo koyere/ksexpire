@@ -26,7 +26,6 @@
         android:label="@string/nav_search"
         tools:layout="@layout/fragment_search">
         
-        <!-- Argument para recibir filtro desde Dashboard -->
         <argument
             android:name="filter_type"
             app:argType="string"
@@ -35,9 +34,9 @@
     </fragment>
 
     <fragment
-        android:id="@+id/navigation_about"
-        android:name="com.koyeresolutions.ksexpire.ui.about.AboutFragment"
-        android:label="@string/nav_about"
-        tools:layout="@layout/fragment_about" />
+        android:id="@+id/navigation_reports"
+        android:name="com.koyeresolutions.ksexpire.ui.reports.ReportsFragment"
+        android:label="@string/nav_reports"
+        tools:layout="@layout/fragment_reports" />
 
 </navigation>

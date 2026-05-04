@@ -49,6 +49,17 @@ class PreferencesManager(context: Context) {
     }
 
     /**
+     * Modo de tema (0=Sistema, 1=Claro, 2=Oscuro)
+     */
+    fun getThemeMode(): Int {
+        return prefs.getInt(Constants.PREF_THEME_MODE, Constants.THEME_SYSTEM)
+    }
+
+    fun setThemeMode(mode: Int) {
+        prefs.edit().putInt(Constants.PREF_THEME_MODE, mode).apply()
+    }
+
+    /**
      * Limpiar todas las preferencias
      */
     fun clearAll() {

@@ -29,6 +29,9 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     private val _monthlyExpense = MutableLiveData<Double>()
     val monthlyExpense: LiveData<Double> = _monthlyExpense
 
+    private val _annualProjection = MutableLiveData<Double>()
+    val annualProjection: LiveData<Double> = _annualProjection
+
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
@@ -75,6 +78,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                 // Calcular gasto mensual normalizado
                 val monthlyExpense = repository.calculateMonthlyExpense()
                 _monthlyExpense.value = monthlyExpense
+                _annualProjection.value = monthlyExpense * 12
 
                 _uiState.value = _uiState.value.copy(
                     monthlyExpense = monthlyExpense,
@@ -107,6 +111,14 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
     fun getFormattedMonthlyExpense(): String {
         val expense = _monthlyExpense.value ?: 0.0
         return CurrencyUtils.formatMonthlyExpense(getApplication(), expense)
+    }
+
+    /**
+     * Formatear proyección anual para mostrar en UI
+     */
+    fun getFormattedAnnualProjection(): String {
+        val annual = _annualProjection.value ?: 0.0
+        return CurrencyUtils.formatPrice(getApplication(), annual)
     }
 
     /**

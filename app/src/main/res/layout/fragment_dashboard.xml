@@ -142,6 +142,16 @@
                                 android:textStyle="bold"
                                 tools:text="$45.99/mes" />
 
+                            <TextView
+                                android:id="@+id/text_annual_projection"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:textAppearance="?attr/textAppearanceBodyMedium"
+                                android:textColor="@color/subscription_primary"
+                                android:alpha="0.7"
+                                tools:text="Proyección anual: $551.88" />
+
                         </LinearLayout>
 
                     </com.google.android.material.card.MaterialCardView>

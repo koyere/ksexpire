@@ -189,6 +189,29 @@ class ItemRepository(
         )
     }
 
+    // ==================== REPORTES ====================
+
+    /**
+     * Obtener las suscripciones más caras
+     */
+    suspend fun getTopExpensiveSubscriptions(limit: Int = 5): List<Item> {
+        return itemDao.getTopExpensiveSubscriptions(limit)
+    }
+
+    /**
+     * Obtener gasto por categoría (nombre → gasto mensual normalizado)
+     */
+    suspend fun getExpenseByCategory(): Map<String, Double> {
+        val subscriptions = itemDao.getSubscriptionsForMonthlyCalculation()
+        val result = mutableMapOf<String, Double>()
+        subscriptions.forEach { item ->
+            val category = item.category ?: "Sin categoría"
+            val current = result.getOrDefault(category, 0.0)
+            result[category] = current + item.getNormalizedMonthlyPrice()
+        }
+        return result
+    }
+
     // ==================== OPERACIONES CRUD ====================
 
     /**

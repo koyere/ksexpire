@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.lifecycle.lifecycleScope
 import com.koyeresolutions.ksexpire.databinding.ActivityNotificationSettingsBinding
 import com.koyeresolutions.ksexpire.services.NotificationService
@@ -56,6 +57,9 @@ class NotificationSettingsActivity : AppCompatActivity() {
      * Configurar elementos de UI
      */
     private fun setupUI() {
+        // Configurar selector de tema
+        setupThemeSelector()
+        
         // Configurar spinner de moneda
         setupCurrencySpinner()
         
@@ -65,6 +69,18 @@ class NotificationSettingsActivity : AppCompatActivity() {
         // Botón guardar
         binding.buttonSave.setOnClickListener {
             saveSettings()
+        }
+    }
+
+    /**
+     * Configurar selector de tema
+     */
+    private fun setupThemeSelector() {
+        val currentTheme = preferences.getInt(Constants.PREF_THEME_MODE, Constants.THEME_SYSTEM)
+        when (currentTheme) {
+            Constants.THEME_SYSTEM -> binding.chipThemeSystem.isChecked = true
+            Constants.THEME_LIGHT -> binding.chipThemeLight.isChecked = true
+            Constants.THEME_DARK -> binding.chipThemeDark.isChecked = true
         }
     }
 
@@ -136,6 +152,22 @@ class NotificationSettingsActivity : AppCompatActivity() {
      */
     private fun saveSettings() {
         val editor = preferences.edit()
+
+        // Guardar tema
+        val themeMode = when {
+            binding.chipThemeLight.isChecked -> Constants.THEME_LIGHT
+            binding.chipThemeDark.isChecked -> Constants.THEME_DARK
+            else -> Constants.THEME_SYSTEM
+        }
+        editor.putInt(Constants.PREF_THEME_MODE, themeMode)
+
+        // Aplicar tema inmediatamente
+        val nightMode = when (themeMode) {
+            Constants.THEME_LIGHT -> AppCompatDelegate.MODE_NIGHT_NO
+            Constants.THEME_DARK -> AppCompatDelegate.MODE_NIGHT_YES
+            else -> AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM
+        }
+        AppCompatDelegate.setDefaultNightMode(nightMode)
 
         // Guardar configuración de moneda
         val selectedCurrency = CurrencyUtils.getSupportedCurrencies()[binding.spinnerCurrency.selectedItemPosition]
