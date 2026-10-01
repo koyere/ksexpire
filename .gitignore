@@ -129,3 +129,8 @@ keystore.properties.template
 
 # Play Store assets (final files)
 play-store-assets/
+# Salidas de builds de release firmados (APK, perfiles, metadatos)
+app/release/
+
+# Configuración de IDE creada al abrir app/ como proyecto aparte
+app/.idea/
