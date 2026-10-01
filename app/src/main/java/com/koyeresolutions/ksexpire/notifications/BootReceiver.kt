@@ -1,15 +1,14 @@
 package com.koyeresolutions.ksexpire.notifications
 
+import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import androidx.work.OneTimeWorkRequestBuilder
-import androidx.work.WorkManager
 import com.koyeresolutions.ksexpire.workers.NotificationRescheduleWorker
 
 /**
- * Receptor para eventos de reinicio del sistema
- * Reprograma todas las notificaciones después del reinicio
+ * Receptor para eventos del sistema que invalidan las alarmas
+ * (reinicio, actualización de la app, concesión del permiso de alarmas exactas)
  */
 class BootReceiver : BroadcastReceiver() {
 
@@ -17,20 +16,9 @@ class BootReceiver : BroadcastReceiver() {
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED,
-            Intent.ACTION_PACKAGE_REPLACED -> {
-                // Programar trabajo para reprogramar notificaciones
-                scheduleNotificationReschedule(context)
+            AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED -> {
+                NotificationRescheduleWorker.runNow(context)
             }
         }
-    }
-
-    /**
-     * Programar trabajo para reprogramar notificaciones
-     */
-    private fun scheduleNotificationReschedule(context: Context) {
-        val workRequest = OneTimeWorkRequestBuilder<NotificationRescheduleWorker>()
-            .build()
-        
-        WorkManager.getInstance(context).enqueue(workRequest)
     }
 }

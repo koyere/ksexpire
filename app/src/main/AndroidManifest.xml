@@ -29,7 +29,7 @@
         android:requestLegacyExternalStorage="false"
         android:preserveLegacyExternalStorage="false"
         android:enableOnBackInvokedCallback="true"
-        tools:targetApi="35">
+        tools:targetApi="36">
 
         <!-- Actividad principal -->
         <activity
@@ -119,11 +119,10 @@
             android:name=".notifications.BootReceiver"
             android:enabled="true"
             android:exported="true">
-            <intent-filter android:priority="1000">
+            <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
-                <action android:name="android.intent.action.PACKAGE_REPLACED" />
-                <data android:scheme="package" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
 

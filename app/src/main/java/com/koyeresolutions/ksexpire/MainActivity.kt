@@ -17,7 +17,7 @@ import androidx.navigation.ui.setupWithNavController
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.koyeresolutions.ksexpire.databinding.ActivityMainBinding
-import com.koyeresolutions.ksexpire.notifications.NotificationManager
+import com.koyeresolutions.ksexpire.services.NotificationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -34,7 +34,8 @@ class MainActivity : AppCompatActivity() {
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permiso concedido, verificar alarmas exactas
+            // Permiso concedido: mostrar recordatorios pendientes y verificar alarmas exactas
+            rescheduleNotificationsOnStartup()
             checkExactAlarmPermission()
         }
         // Si no se concede, la app funciona pero sin notificaciones
@@ -124,12 +125,9 @@ class MainActivity : AppCompatActivity() {
      * Actúa como red de seguridad para notificaciones perdidas
      */
     private fun rescheduleNotificationsOnStartup() {
-        val app = application as KSExpireApplication
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val items = app.database.itemDao().getAllItemsForBackup()
-                val notificationManager = NotificationManager(this@MainActivity)
-                notificationManager.rescheduleAllNotifications(items)
+                NotificationService(applicationContext).rescheduleAllNotifications()
             } catch (e: Exception) {
                 e.printStackTrace()
             }

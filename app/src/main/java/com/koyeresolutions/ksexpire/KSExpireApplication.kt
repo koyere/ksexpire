@@ -13,6 +13,7 @@ import com.koyeresolutions.ksexpire.notifications.NotificationChannels
 import com.koyeresolutions.ksexpire.utils.Constants
 import com.koyeresolutions.ksexpire.utils.FileUtils
 import com.koyeresolutions.ksexpire.utils.PreferencesManager
+import com.koyeresolutions.ksexpire.workers.NotificationRescheduleWorker
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -116,5 +117,8 @@ class KSExpireApplication : Application() {
             .build()
         
         WorkManager.initialize(this, config)
+
+        // Revisión diaria de recordatorios (red de seguridad si el sistema descarta alarmas)
+        NotificationRescheduleWorker.scheduleDaily(this)
     }
 }

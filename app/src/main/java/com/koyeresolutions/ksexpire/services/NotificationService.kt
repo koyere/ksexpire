@@ -1,6 +1,7 @@
 package com.koyeresolutions.ksexpire.services
 
 import android.content.Context
+import com.koyeresolutions.ksexpire.data.database.AppDatabase
 import com.koyeresolutions.ksexpire.data.entities.Item
 import com.koyeresolutions.ksexpire.notifications.NotificationManager
 import com.koyeresolutions.ksexpire.utils.Constants
@@ -13,7 +14,7 @@ import com.koyeresolutions.ksexpire.utils.Constants
 class NotificationService(private val context: Context) {
 
     private val notificationManager = NotificationManager(context)
-    
+
     private val preferences by lazy {
         context.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
     }
@@ -41,7 +42,7 @@ class NotificationService(private val context: Context) {
 
     /**
      * Programar notificaciones para un ítem nuevo o actualizado
-     * Respeta las preferencias del usuario
+     * Respeta las preferencias del usuario (cancela los tipos deshabilitados)
      */
     fun scheduleItemNotifications(item: Item) {
         if (!item.isActive) {
@@ -49,23 +50,29 @@ class NotificationService(private val context: Context) {
             return
         }
 
-        // Prueba gratuita tiene prioridad
+        // Prueba gratuita: avisos propios, además de los del tipo de ítem
         if (item.isFreeTrial && item.freeTrialEndDate != null) {
             notificationManager.scheduleFreeTrialNotifications(item)
+        } else {
+            notificationManager.cancelFreeTrialNotifications(item)
         }
 
         when {
-            item.isSubscription() && isSubscriptionNotificationsEnabled() -> {
-                notificationManager.scheduleSubscriptionNotification(item)
+            item.isSubscription() -> {
+                if (isSubscriptionNotificationsEnabled()) {
+                    notificationManager.scheduleSubscriptionNotification(item)
+                } else {
+                    notificationManager.cancelSubscriptionNotification(item)
+                }
             }
             item.isWarranty() -> {
-                if (isWarranty30NotificationsEnabled() || isWarranty7NotificationsEnabled()) {
-                    notificationManager.scheduleWarrantyNotifications(
-                        item,
-                        schedule30Days = isWarranty30NotificationsEnabled(),
-                        schedule7Days = isWarranty7NotificationsEnabled()
-                    )
-                }
+                // Cancelar primero para eliminar el aviso que se haya deshabilitado
+                notificationManager.cancelWarrantyNotifications(item)
+                notificationManager.scheduleWarrantyNotifications(
+                    item,
+                    schedule30Days = isWarranty30NotificationsEnabled(),
+                    schedule7Days = isWarranty7NotificationsEnabled()
+                )
             }
         }
     }
@@ -86,34 +93,37 @@ class NotificationService(private val context: Context) {
     }
 
     /**
-     * Verificar y programar notificaciones inmediatas para ítems que vencen pronto
-     * Respeta las preferencias del usuario
+     * Reprogramar todas las notificaciones a partir de la base de datos.
+     * Se ejecuta al abrir la app, tras reinicio/actualización y una vez al día.
+     * - Avanza al siguiente ciclo las suscripciones cuya fecha de cobro ya pasó
+     * - Programa alarmas futuras y muestra los recordatorios que se hayan perdido
      */
-    suspend fun checkImmediateNotifications(items: List<Item>) {
-        items.filter { it.isActive }.forEach { item ->
-            val daysUntilExpiry = item.getDaysUntilExpiry()
-            
-            when {
-                item.isSubscription() && daysUntilExpiry == 1 && isSubscriptionNotificationsEnabled() -> {
-                    notificationManager.showNotification(
-                        item, 
-                        NotificationManager.NotificationType.SUBSCRIPTION
-                    )
-                }
-                item.isWarranty() && daysUntilExpiry == 30 && isWarranty30NotificationsEnabled() -> {
-                    notificationManager.showNotification(
-                        item, 
-                        NotificationManager.NotificationType.WARRANTY_30_DAYS
-                    )
-                }
-                item.isWarranty() && daysUntilExpiry == 7 && isWarranty7NotificationsEnabled() -> {
-                    notificationManager.showNotification(
-                        item, 
-                        NotificationManager.NotificationType.WARRANTY_7_DAYS
-                    )
-                }
+    suspend fun rescheduleAllNotifications() {
+        val dao = AppDatabase.getDatabase(context).itemDao()
+        val startOfToday = NotificationManager.startOfDay(System.currentTimeMillis())
+
+        dao.getAllItemsForBackup().filter { it.isActive }.forEach { item ->
+            val current = if (item.isSubscription() && item.expiryDate < startOfToday) {
+                advanceSubscription(item, startOfToday)?.also { dao.updateItem(it) } ?: item
+            } else {
+                item
             }
+            scheduleItemNotifications(current)
         }
+
+        notificationManager.pruneSentRecords()
+    }
+
+    /**
+     * Avanzar la fecha de cobro de una suscripción hasta hoy o después
+     */
+    private fun advanceSubscription(item: Item, startOfToday: Long): Item? {
+        var updated = item
+        while (updated.expiryDate < startOfToday) {
+            val next = updated.getNextBillingDate() ?: return null
+            updated = updated.copy(expiryDate = next)
+        }
+        return updated.copy(updatedAt = System.currentTimeMillis())
     }
 
     /**
@@ -127,7 +137,7 @@ class NotificationService(private val context: Context) {
         val warrantiesWithNotifications = activeItems.count { it.isWarranty() }
         val warrantyNotificationsPerItem = (if (isWarranty30NotificationsEnabled()) 1 else 0) +
                 (if (isWarranty7NotificationsEnabled()) 1 else 0)
-        
+
         val upcomingNotifications = activeItems.count { item ->
             val days = item.getDaysUntilExpiry()
             when {
@@ -136,7 +146,7 @@ class NotificationService(private val context: Context) {
                 else -> false
             }
         }
-        
+
         return NotificationStats(
             totalScheduled = subscriptionsWithNotifications + (warrantiesWithNotifications * warrantyNotificationsPerItem),
             subscriptionsScheduled = subscriptionsWithNotifications,
