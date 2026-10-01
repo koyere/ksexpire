@@ -1,5 +1,10 @@
 # Changelog
 
+## v1.2.1 (versionCode 8)
+
+### Técnico
+- OCR de recibos vía Google Play Services: el modelo ya no va dentro de la app y lo descarga Play Services al instalar. La descarga baja unos 12 MB (AAB de 25,7 MB a 7,5 MB). El OCR funciona sin internet después de esa descarga; en teléfonos sin Play Services la foto se guarda pero no se detectan datos
+
 ## v1.2.0 (versionCode 7)
 
 ### Nuevas funciones

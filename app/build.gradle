@@ -32,8 +32,8 @@ android {
         applicationId "com.koyeresolutions.ksexpire"
         minSdk 24
         targetSdk 36
-        versionCode 7
-        versionName "1.2.0"
+        versionCode 8
+        versionName "1.2.1"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         
@@ -182,8 +182,9 @@ dependencies {
     // MPAndroidChart para gráficas de reportes
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
     
-    // ML Kit OCR (offline, no requiere internet)
-    implementation 'com.google.mlkit:text-recognition:16.0.1'
+    // ML Kit OCR vía Google Play Services: el modelo lo descarga Play Services al instalar
+    // (no se incluye en el APK, ~12 MB menos). Funciona sin internet tras esa descarga.
+    implementation 'com.google.android.gms:play-services-mlkit-text-recognition:19.0.1'
     
     // Kotlinx Serialization para JSON
     implementation 'org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0'

@@ -91,6 +91,11 @@
             android:parentActivityName=".MainActivity"
             android:theme="@style/Theme.KSExpire" />
 
+        <!-- Descargar el modelo de OCR de ML Kit al instalar la app (Play Services) -->
+        <meta-data
+            android:name="com.google.mlkit.vision.DEPENDENCIES"
+            android:value="ocr" />
+
         <!-- Proveedor de archivos para compartir imágenes -->
         <provider
             android:name="androidx.core.content.FileProvider"
