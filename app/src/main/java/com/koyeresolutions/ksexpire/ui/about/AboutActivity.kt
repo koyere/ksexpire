@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.koyeresolutions.ksexpire.R
+import com.koyeresolutions.ksexpire.utils.applySystemBarInsets
 
 /**
  * Activity contenedora para AboutFragment
@@ -14,6 +15,7 @@ class AboutActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_about)
+        findViewById<android.view.ViewGroup>(android.R.id.content).getChildAt(0).applySystemBarInsets()
         
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
         supportActionBar?.title = getString(R.string.nav_about)

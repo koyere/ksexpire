@@ -26,6 +26,7 @@ import com.koyeresolutions.ksexpire.utils.DateUtils
 import com.koyeresolutions.ksexpire.utils.FileUtils
 import kotlinx.coroutines.launch
 import java.util.*
+import com.koyeresolutions.ksexpire.utils.applySystemBarInsets
 
 /**
  * Actividad para crear y editar ítems
@@ -69,6 +70,7 @@ class CreateEditItemActivity : AppCompatActivity() {
         
         binding = ActivityCreateEditItemBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
         
         setupToolbar()
         setupUI()

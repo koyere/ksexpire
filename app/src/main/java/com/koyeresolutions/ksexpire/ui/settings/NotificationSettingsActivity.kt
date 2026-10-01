@@ -13,6 +13,7 @@ import com.koyeresolutions.ksexpire.workers.NotificationRescheduleWorker
 import com.koyeresolutions.ksexpire.utils.Constants
 import com.koyeresolutions.ksexpire.utils.CurrencyUtils
 import kotlinx.coroutines.launch
+import com.koyeresolutions.ksexpire.utils.applySystemBarInsets
 
 /**
  * Actividad para configurar notificaciones y preferencias
@@ -29,6 +30,7 @@ class NotificationSettingsActivity : AppCompatActivity() {
         
         binding = ActivityNotificationSettingsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
         
         setupToolbar()
         initializeServices()

@@ -26,6 +26,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import com.koyeresolutions.ksexpire.utils.applySystemBarInsets
 
 /**
  * Actividad de cámara con CameraX
@@ -60,6 +61,7 @@ class CameraActivity : AppCompatActivity() {
         
         binding = ActivityCameraBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
         
         setupUI()
         checkPermissionsAndStartCamera()

@@ -20,6 +20,7 @@ import com.koyeresolutions.ksexpire.databinding.DialogBackupPasswordBinding
 import com.koyeresolutions.ksexpire.utils.Constants
 import com.koyeresolutions.ksexpire.utils.DateUtils
 import kotlinx.coroutines.launch
+import com.koyeresolutions.ksexpire.utils.applySystemBarInsets
 
 /**
  * Actividad para backup y restauración
@@ -48,6 +49,7 @@ class BackupActivity : AppCompatActivity() {
         
         binding = ActivityBackupBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
         
         setupToolbar()
         setupUI()

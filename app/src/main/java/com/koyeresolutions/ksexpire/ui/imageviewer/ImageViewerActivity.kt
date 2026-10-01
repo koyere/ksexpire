@@ -5,6 +5,7 @@ import android.view.MenuItem
 import androidx.appcompat.app.AppCompatActivity
 import com.koyeresolutions.ksexpire.databinding.ActivityImageViewerBinding
 import com.koyeresolutions.ksexpire.utils.FileUtils
+import com.koyeresolutions.ksexpire.utils.applySystemBarInsets
 
 /**
  * Actividad para ver imagen en pantalla completa
@@ -24,6 +25,7 @@ class ImageViewerActivity : AppCompatActivity() {
         
         binding = ActivityImageViewerBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
         
         setupToolbar()
         loadImage()

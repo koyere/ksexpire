@@ -20,6 +20,7 @@ import com.koyeresolutions.ksexpire.databinding.ActivityMainBinding
 import com.koyeresolutions.ksexpire.services.NotificationService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import com.koyeresolutions.ksexpire.utils.applySystemBarInsets
 
 /**
  * Actividad principal que contiene la navegación por tabs
@@ -46,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
         
         setupNavigation()
         requestNotificationPermissions()

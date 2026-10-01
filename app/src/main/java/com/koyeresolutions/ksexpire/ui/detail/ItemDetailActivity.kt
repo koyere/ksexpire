@@ -16,6 +16,7 @@ import com.koyeresolutions.ksexpire.utils.CurrencyUtils
 import com.koyeresolutions.ksexpire.utils.DateUtils
 import com.koyeresolutions.ksexpire.utils.FileUtils
 import kotlinx.coroutines.launch
+import com.koyeresolutions.ksexpire.utils.applySystemBarInsets
 
 /**
  * Actividad para ver el detalle de un ítem sin editarlo
@@ -34,6 +35,7 @@ class ItemDetailActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityItemDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.root.applySystemBarInsets()
 
         itemId = intent.getLongExtra(EXTRA_ITEM_ID, -1)
         if (itemId == -1L) {
