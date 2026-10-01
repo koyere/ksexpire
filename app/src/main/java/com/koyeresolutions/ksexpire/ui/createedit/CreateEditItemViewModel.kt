@@ -9,6 +9,7 @@ import com.koyeresolutions.ksexpire.KSExpireApplication
 import com.koyeresolutions.ksexpire.data.entities.Item
 import com.koyeresolutions.ksexpire.data.repository.ItemRepository
 import com.koyeresolutions.ksexpire.utils.Constants
+import com.koyeresolutions.ksexpire.utils.DateUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -29,8 +30,17 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
+    // Errores del formulario completo: solo se emiten al intentar guardar (se muestran en diálogo)
     private val _validationErrors = MutableLiveData<List<String>>()
     val validationErrors: LiveData<List<String>> = _validationErrors
+
+    // Errores por campo en tiempo real (se muestran bajo cada campo)
+    private val _fieldErrors = MutableStateFlow(FieldErrors())
+    val fieldErrors: StateFlow<FieldErrors> = _fieldErrors.asStateFlow()
+
+    // Campos que el usuario ya editó: no marcar error en campos que aún no toca
+    private val touchedFields = mutableSetOf<String>()
+    private var saveAttempted = false
 
     private val _duplicateItem = MutableLiveData<Item?>()
     val duplicateItem: LiveData<Item?> = _duplicateItem
@@ -104,13 +114,18 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
      * Actualizar tipo de ítem
      */
     fun updateItemType(type: Int) {
-        _uiState.value = _uiState.value.copy(
+        val isSubscription = type == Constants.ITEM_TYPE_SUBSCRIPTION
+        val state = _uiState.value
+        _uiState.value = state.copy(
             itemType = type,
-            billingFrequency = if (type == Constants.ITEM_TYPE_SUBSCRIPTION) {
-                Constants.FREQUENCY_MONTHLY
+            billingFrequency = if (isSubscription) {
+                state.billingFrequency ?: Constants.FREQUENCY_MONTHLY
             } else {
                 null
-            }
+            },
+            // La prueba gratuita solo aplica a suscripciones
+            isFreeTrial = isSubscription && state.isFreeTrial,
+            freeTrialEndDate = if (isSubscription) state.freeTrialEndDate else null
         )
     }
 
@@ -119,6 +134,7 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
      */
     fun updateName(name: String) {
         _uiState.value = _uiState.value.copy(name = name)
+        touchedFields += FIELD_NAME
         validateField()
         checkForDuplicates(name)
     }
@@ -156,6 +172,7 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
      */
     fun updatePrice(price: String) {
         _uiState.value = _uiState.value.copy(price = price)
+        touchedFields += FIELD_PRICE
         validateField()
     }
 
@@ -219,13 +236,12 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
     private fun validateForm(): List<String> {
         val errors = mutableListOf<String>()
         val state = _uiState.value
+        val isSubscription = state.itemType == Constants.ITEM_TYPE_SUBSCRIPTION
 
-        // Validar nombre
-        if (state.name.isBlank()) {
-            errors.add("El nombre es obligatorio")
-        }
+        validateName(state.name)?.let { errors.add(it) }
+        validatePrice(state.price)?.let { errors.add(it) }
 
-        // Validar fechas
+        // Validar fechas (se comparan por día, no por hora)
         if (state.purchaseDate <= 0) {
             errors.add("La fecha de compra es obligatoria")
         }
@@ -234,25 +250,63 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
             errors.add("La fecha de vencimiento es obligatoria")
         }
 
-        if (state.expiryDate <= state.purchaseDate) {
-            errors.add("La fecha de vencimiento debe ser posterior a la de compra")
+        val purchaseDay = DateUtils.getStartOfDay(state.purchaseDate)
+        val expiryDay = DateUtils.getStartOfDay(state.expiryDate)
+
+        if (state.purchaseDate > 0 && state.expiryDate > 0 && expiryDay <= purchaseDay) {
+            errors.add(
+                if (isSubscription) "El próximo cobro debe ser posterior a la fecha de inicio"
+                else "El vencimiento de la garantía debe ser posterior a la fecha de compra"
+            )
         }
 
-        // Validar precio (si se proporciona)
-        if (state.price.isNotBlank()) {
-            val priceValue = state.price.toDoubleOrNull()
-            if (priceValue == null || priceValue < 0) {
-                errors.add("El precio debe ser un número válido mayor o igual a 0")
-            }
+        if (!isSubscription && state.purchaseDate > DateUtils.getTodayEnd()) {
+            errors.add("La fecha de compra no puede ser futura")
         }
 
         // Validar frecuencia para suscripciones
-        if (state.itemType == Constants.ITEM_TYPE_SUBSCRIPTION && state.billingFrequency.isNullOrBlank()) {
+        if (isSubscription && state.billingFrequency.isNullOrBlank()) {
             errors.add("La frecuencia de cobro es obligatoria para suscripciones")
+        }
+
+        // Validar prueba gratuita
+        if (isSubscription && state.isFreeTrial) {
+            val trialEnd = state.freeTrialEndDate
+            if (trialEnd == null) {
+                errors.add("Indica cuándo termina la prueba gratuita")
+            } else if (DateUtils.getStartOfDay(trialEnd) < purchaseDay) {
+                errors.add("La prueba gratuita no puede terminar antes de la fecha de inicio")
+            } else if (!isEditMode && trialEnd < DateUtils.getTodayStart()) {
+                errors.add("La prueba gratuita ya terminó; desactívala o elige otra fecha")
+            }
         }
 
         return errors
     }
+
+    private fun validateName(name: String): String? = when {
+        name.isBlank() -> "El nombre es obligatorio"
+        name.trim().length > MAX_NAME_LENGTH -> "El nombre no puede superar $MAX_NAME_LENGTH caracteres"
+        else -> null
+    }
+
+    private fun validatePrice(price: String): String? {
+        if (price.isBlank()) return null // El precio es opcional
+        val value = parsePrice(price) ?: return "Ingresa un precio válido (ej. 199.99)"
+        val decimals = price.trim().replace(',', '.').substringAfter('.', "")
+        return when {
+            value < 0 -> "El precio no puede ser negativo"
+            value > MAX_PRICE -> "El precio es demasiado alto"
+            decimals.length > 2 -> "Usa como máximo 2 decimales"
+            else -> null
+        }
+    }
+
+    /**
+     * Convertir el texto del precio a número, aceptando coma o punto decimal
+     */
+    private fun parsePrice(price: String): Double? =
+        price.trim().replace(',', '.').toDoubleOrNull()?.takeIf { it.isFinite() }
 
     /**
      * Guardar ítem
@@ -263,6 +317,8 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
                 _isLoading.value = true
                 
                 // Validar formulario
+                saveAttempted = true
+                validateField()
                 val errors = validateForm()
                 if (errors.isNotEmpty()) {
                     _validationErrors.value = errors
@@ -271,7 +327,7 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
                 }
 
                 val state = _uiState.value
-                val priceValue = if (state.price.isBlank()) null else state.price.toDouble()
+                val priceValue = if (state.price.isBlank()) null else parsePrice(state.price)
                 android.util.Log.d("CreateEditVM", "priceValue after conversion: $priceValue")
 
                 // Crear o actualizar ítem
@@ -343,9 +399,20 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
      * Validar campos en tiempo real (muestra errores sin bloquear)
      */
     private fun validateField() {
-        val errors = validateForm()
-        _validationErrors.value = errors
+        val state = _uiState.value
+        _fieldErrors.value = FieldErrors(
+            name = if (saveAttempted || FIELD_NAME in touchedFields) validateName(state.name) else null,
+            price = if (saveAttempted || FIELD_PRICE in touchedFields) validatePrice(state.price) else null
+        )
     }
+
+    /**
+     * Errores en línea de los campos de texto
+     */
+    data class FieldErrors(
+        val name: String? = null,
+        val price: String? = null
+    )
 
     /**
      * Limpiar resultado de guardado
@@ -401,5 +468,13 @@ class CreateEditItemViewModel(application: Application) : AndroidViewModel(appli
     sealed class SaveResult {
         object Success : SaveResult()
         data class Error(val message: String) : SaveResult()
+    }
+
+    companion object {
+        const val MAX_NAME_LENGTH = 60
+        const val MAX_CATEGORY_LENGTH = 30
+        private const val MAX_PRICE = 9_999_999.99
+        private const val FIELD_NAME = "name"
+        private const val FIELD_PRICE = "price"
     }
 }

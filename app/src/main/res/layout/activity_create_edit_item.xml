@@ -169,6 +169,7 @@
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/edit_text_name"
+                            android:maxLength="60"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="textCapWords"
@@ -244,6 +245,8 @@
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/edit_text_price"
+                            android:maxLength="13"
+                            android:digits="0123456789.,"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="numberDecimal"

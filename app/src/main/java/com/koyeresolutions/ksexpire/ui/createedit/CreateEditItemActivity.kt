@@ -164,6 +164,7 @@ class CreateEditItemActivity : AppCompatActivity() {
         val input = com.google.android.material.textfield.TextInputEditText(this)
         input.hint = "Nombre de la categoría"
         input.inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        input.filters = arrayOf(android.text.InputFilter.LengthFilter(CreateEditItemViewModel.MAX_CATEGORY_LENGTH))
         
         val container = android.widget.FrameLayout(this)
         val params = android.widget.FrameLayout.LayoutParams(
@@ -181,6 +182,8 @@ class CreateEditItemActivity : AppCompatActivity() {
                 val name = input.text?.toString()?.trim()
                 if (!name.isNullOrBlank()) {
                     viewModel.updateCategory(name, "#607D8B") // Color gris por defecto
+                } else {
+                    binding.chipGroupCategory.clearCheck()
                 }
             }
             .setNegativeButton("Cancelar") { _, _ ->
@@ -394,6 +397,14 @@ class CreateEditItemActivity : AppCompatActivity() {
             binding.buttonSave.isEnabled = !isLoading
         }
         
+        // Errores en línea de los campos de texto
+        lifecycleScope.launch {
+            viewModel.fieldErrors.collect { errors ->
+                binding.layoutName.error = errors.name
+                binding.layoutPrice.error = errors.price
+            }
+        }
+
         // Errores de validación
         viewModel.validationErrors.observe(this) { errors ->
             if (errors.isNotEmpty()) {
@@ -711,7 +722,7 @@ class CreateEditItemActivity : AppCompatActivity() {
         val message = buildString {
             append("Detectamos estos datos del recibo:\n\n")
             if (name != null) append("📝 Nombre: $name\n")
-            if (price != null) append("💰 Precio: $${String.format("%.2f", price)}\n")
+            if (price != null) append("💰 Precio: $${String.format(java.util.Locale.US, "%.2f", price)}\n")
             if (date != null) append("📅 Fecha: ${DateUtils.formatDate(date)}\n")
             append("\n¿Deseas usar estos datos?")
         }
@@ -727,7 +738,7 @@ class CreateEditItemActivity : AppCompatActivity() {
                 }
                 if (price != null && viewModel.uiState.value.price.isBlank()) {
                     viewModel.updatePrice(price.toString())
-                    binding.editTextPrice.setText(String.format("%.2f", price))
+                    binding.editTextPrice.setText(String.format(java.util.Locale.US, "%.2f", price))
                 }
                 if (date != null) {
                     viewModel.updatePurchaseDate(date)
