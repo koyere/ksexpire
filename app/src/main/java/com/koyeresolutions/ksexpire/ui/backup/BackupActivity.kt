@@ -5,14 +5,18 @@ import android.net.Uri
 import android.os.Bundle
 import android.view.MenuItem
 import android.view.View
+import android.view.inputmethod.EditorInfo
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.snackbar.Snackbar
 import com.koyeresolutions.ksexpire.R
 import com.koyeresolutions.ksexpire.databinding.ActivityBackupBinding
+import com.koyeresolutions.ksexpire.databinding.DialogBackupPasswordBinding
 import com.koyeresolutions.ksexpire.utils.Constants
 import com.koyeresolutions.ksexpire.utils.DateUtils
 import kotlinx.coroutines.launch
@@ -80,6 +84,7 @@ class BackupActivity : AppCompatActivity() {
             • Los backups incluyen todos tus datos e imágenes
             • Se guardan en formato ZIP comprimido
             • Puedes guardarlos en Google Drive, USB, etc.
+            • Opcionalmente, puedes protegerlos con contraseña (AES-256)
             • La restauración reemplaza todos los datos actuales
         """.trimIndent()
     }
@@ -119,6 +124,14 @@ class BackupActivity : AppCompatActivity() {
             }
         }
 
+        // Backup cifrado: pedir contraseña
+        viewModel.passwordRequest.observe(this) { request ->
+            request?.let {
+                viewModel.clearPasswordRequest()
+                showRestorePasswordDialog(it)
+            }
+        }
+
         // Información de backup
         lifecycleScope.launch {
             viewModel.backupInfo.collect { info ->
@@ -138,8 +151,81 @@ class BackupActivity : AppCompatActivity() {
      * Crear backup
      */
     private fun createBackup() {
-        val fileName = viewModel.generateBackupFileName()
-        createBackupLauncher.launch(fileName)
+        showBackupPasswordDialog()
+    }
+
+    /**
+     * Elegir el archivo de destino del backup
+     */
+    private fun launchBackupFilePicker(password: String?) {
+        viewModel.setBackupPassword(password)
+        createBackupLauncher.launch(viewModel.generateBackupFileName())
+    }
+
+    /**
+     * Preguntar si se quiere proteger el backup con contraseña (opcional)
+     */
+    private fun showBackupPasswordDialog() {
+        val dialogBinding = DialogBackupPasswordBinding.inflate(layoutInflater)
+        dialogBinding.textPasswordMessage.setText(R.string.backup_password_message)
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.backup_password_title)
+            .setView(dialogBinding.root)
+            .setPositiveButton(R.string.backup_password_encrypt, null) // Se valida abajo sin cerrar
+            .setNeutralButton(R.string.backup_password_skip) { _, _ -> launchBackupFilePicker(null) }
+            .setNegativeButton(R.string.dialog_cancel, null)
+            .show()
+
+        dialogBinding.editPassword.doAfterTextChanged { dialogBinding.layoutPassword.error = null }
+        dialogBinding.editPasswordConfirm.doAfterTextChanged { dialogBinding.layoutPasswordConfirm.error = null }
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val password = dialogBinding.editPassword.text?.toString().orEmpty()
+            val confirm = dialogBinding.editPasswordConfirm.text?.toString().orEmpty()
+            when {
+                password.length < MIN_PASSWORD_LENGTH -> dialogBinding.layoutPassword.error =
+                    getString(R.string.backup_password_too_short, MIN_PASSWORD_LENGTH)
+                password != confirm -> dialogBinding.layoutPasswordConfirm.error =
+                    getString(R.string.backup_password_mismatch)
+                else -> {
+                    dialog.dismiss()
+                    launchBackupFilePicker(password)
+                }
+            }
+        }
+    }
+
+    /**
+     * Pedir la contraseña de un backup cifrado para restaurarlo
+     */
+    private fun showRestorePasswordDialog(request: BackupViewModel.PasswordRequest) {
+        val dialogBinding = DialogBackupPasswordBinding.inflate(layoutInflater)
+        dialogBinding.textPasswordMessage.setText(R.string.restore_password_message)
+        dialogBinding.layoutPasswordConfirm.visibility = View.GONE
+        dialogBinding.editPassword.imeOptions = EditorInfo.IME_ACTION_DONE
+        if (request.wrongPassword) {
+            dialogBinding.layoutPassword.error = getString(R.string.restore_password_wrong)
+        }
+
+        val dialog = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.restore_password_title)
+            .setView(dialogBinding.root)
+            .setPositiveButton(R.string.restore_password_action, null) // Se valida abajo sin cerrar
+            .setNegativeButton(R.string.dialog_cancel, null)
+            .show()
+
+        dialogBinding.editPassword.doAfterTextChanged { dialogBinding.layoutPassword.error = null }
+
+        dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val password = dialogBinding.editPassword.text?.toString().orEmpty()
+            if (password.isEmpty()) {
+                dialogBinding.layoutPassword.error = getString(R.string.backup_password_required)
+            } else {
+                dialog.dismiss()
+                viewModel.restoreEncryptedBackup(request.uri, password)
+            }
+        }
     }
 
     /**
@@ -195,6 +281,7 @@ class BackupActivity : AppCompatActivity() {
                 • ${result.itemsCount} ítems guardados
                 • ${result.imagesCount} imágenes incluidas
                 • Tamaño: ${formatFileSize(result.fileSize)}
+                • ${if (result.encrypted) "Protegido con contraseña 🔒" else "Sin contraseña"}
             """.trimIndent()
             
             MaterialAlertDialogBuilder(this)
@@ -264,6 +351,10 @@ class BackupActivity : AppCompatActivity() {
         intent?.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
         startActivity(intent)
         finishAffinity()
+    }
+
+    companion object {
+        private const val MIN_PASSWORD_LENGTH = 6
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

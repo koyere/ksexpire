@@ -116,11 +116,16 @@ class BackupManager(private val context: Context) {
                     ?: return@withContext Result.failure(Exception("No se pudo abrir el archivo de backup"))
 
                 // Detectar si el archivo está cifrado
-                val zipData = if (isEncryptedBackup(rawBytes)) {
+                val encrypted = isEncryptedBackup(rawBytes)
+                val zipData = if (encrypted) {
                     if (password == null) {
-                        return@withContext Result.failure(Exception("Este backup está cifrado. Se requiere contraseña."))
+                        return@withContext Result.failure(PasswordRequiredException())
                     }
-                    decryptData(rawBytes, password)
+                    try {
+                        decryptData(rawBytes, password)
+                    } catch (e: java.security.GeneralSecurityException) {
+                        return@withContext Result.failure(WrongPasswordException())
+                    }
                 } else {
                     rawBytes
                 }
@@ -155,6 +160,8 @@ class BackupManager(private val context: Context) {
                 // Validar backup
                 val validMetadata = metadata
                 if (validMetadata == null) {
+                    // Un descifrado con clave errónea puede no fallar pero producir datos ilegibles
+                    if (encrypted) return@withContext Result.failure(WrongPasswordException())
                     return@withContext Result.failure(Exception("Archivo de backup inválido: falta metadata"))
                 }
 
@@ -451,6 +458,12 @@ class BackupManager(private val context: Context) {
             }
         }
     }
+
+    /** El backup está cifrado y no se proporcionó contraseña */
+    class PasswordRequiredException : Exception("Este backup está protegido con contraseña")
+
+    /** La contraseña no corresponde al backup */
+    class WrongPasswordException : Exception("Contraseña incorrecta")
 
     /**
      * Metadata del backup

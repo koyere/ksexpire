@@ -38,6 +38,20 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
     private val _backupInfo = MutableStateFlow(BackupInfo())
     val backupInfo: StateFlow<BackupInfo> = _backupInfo.asStateFlow()
 
+    // Solicitud de contraseña para restaurar un backup cifrado
+    private val _passwordRequest = MutableLiveData<PasswordRequest?>()
+    val passwordRequest: LiveData<PasswordRequest?> = _passwordRequest
+
+    // Contraseña elegida para el próximo backup (solo en memoria, nunca se persiste)
+    private var pendingBackupPassword: String? = null
+
+    /**
+     * Definir la contraseña del próximo backup (null = sin cifrar)
+     */
+    fun setBackupPassword(password: String?) {
+        pendingBackupPassword = password
+    }
+
     /**
      * Cargar información para backup
      */
@@ -77,8 +91,10 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                 // Obtener todos los ítems para backup
                 val items = repository.getAllItemsForBackup()
 
-                // Crear backup
-                val result = backupManager.createBackup(items, outputUri)
+                // Crear backup (cifrado si se definió contraseña)
+                val password = pendingBackupPassword
+                pendingBackupPassword = null
+                val result = backupManager.createBackup(items, outputUri, password)
 
                 result.fold(
                     onSuccess = { backupResult ->
@@ -87,6 +103,7 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                             itemsCount = backupResult.itemsBackedUp,
                             imagesCount = backupResult.imagesBackedUp,
                             fileSize = backupResult.backupSize,
+                            encrypted = password != null,
                             message = backupResult.message
                         )
                     },
@@ -122,9 +139,13 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
 
                 validationResult.fold(
                     onSuccess = { validation ->
-                        if (validation.isValid) {
+                        if (validation.isValid && validation.isEncrypted) {
+                            // Backup cifrado: pedir contraseña antes de restaurar
+                            _isLoading.value = false
+                            _passwordRequest.value = PasswordRequest(inputUri, wrongPassword = false)
+                        } else if (validation.isValid) {
                             // Archivo válido, proceder con restauración
-                            performRestore(inputUri)
+                            performRestore(inputUri, null)
                         } else {
                             _errorMessage.value = "Archivo de backup inválido o corrupto"
                             _isLoading.value = false
@@ -146,10 +167,27 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
     /**
      * Realizar restauración
      */
-    private suspend fun performRestore(inputUri: Uri) {
+    /**
+     * Restaurar un backup cifrado con la contraseña indicada por el usuario
+     */
+    fun restoreEncryptedBackup(inputUri: Uri, password: String) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            performRestore(inputUri, password)
+        }
+    }
+
+    /**
+     * Limpiar solicitud de contraseña
+     */
+    fun clearPasswordRequest() {
+        _passwordRequest.value = null
+    }
+
+    private suspend fun performRestore(inputUri: Uri, password: String?) {
         try {
             // Restaurar backup
-            val result = backupManager.restoreBackup(inputUri)
+            val result = backupManager.restoreBackup(inputUri, password)
 
             result.fold(
                 onSuccess = { restoreResult ->
@@ -178,10 +216,16 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
                     )
                 },
                 onFailure = { exception ->
-                    _restoreResult.value = BackupOperationResult(
-                        success = false,
-                        message = exception.message ?: "Error desconocido al restaurar backup"
-                    )
+                    when (exception) {
+                        is BackupManager.WrongPasswordException ->
+                            _passwordRequest.value = PasswordRequest(inputUri, wrongPassword = true)
+                        is BackupManager.PasswordRequiredException ->
+                            _passwordRequest.value = PasswordRequest(inputUri, wrongPassword = false)
+                        else -> _restoreResult.value = BackupOperationResult(
+                            success = false,
+                            message = exception.message ?: "Error desconocido al restaurar backup"
+                        )
+                    }
                 }
             )
 
@@ -243,6 +287,15 @@ class BackupViewModel(application: Application) : AndroidViewModel(application) 
         val imagesCount: Int = 0,
         val fileSize: Long = 0L,
         val backupDate: Long = 0L,
+        val encrypted: Boolean = false,
         val message: String
+    )
+
+    /**
+     * Solicitud de contraseña para un backup cifrado
+     */
+    data class PasswordRequest(
+        val uri: Uri,
+        val wrongPassword: Boolean
     )
 }
